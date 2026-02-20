@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Herald — Fleet Control Plane</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/docs/shared.css">
+  <style>
+    /* ════════════════════════════════════
+       DASHBOARD-SPECIFIC STYLES
+       Extends shared.css tokens
+       ════════════════════════════════════ */
+
+    /* Detail panel two-column layout */
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    @media (max-width: 860px) {
+      .detail-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Metric cards inside detail */
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.55rem;
+      margin-bottom: 0.85rem;
+    }
+    .metric-card {
+      border: 1px solid var(--bg-steel);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem;
+      background: var(--bg-charcoal);
+    }
+    .metric-card .label {
+      font-size: 0.68rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.25rem;
+    }
+    .metric-card .value {
+      font-size: 1.15rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      line-height: 1.1;
+    }
+
+    /* Scorecard & timeline tables */
+    .scorecard-table,
+    .timeline-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+    .scorecard-table th,
+    .timeline-table th {
+      text-align: left;
+      padding: 0.4rem;
+      border-bottom: 2px solid var(--bg-steel);
+      color: var(--text-secondary);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.66rem;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+    .scorecard-table td,
+    .timeline-table td {
+      padding: 0.35rem 0.4rem;
+      border-bottom: 1px solid var(--bg-steel);
+      vertical-align: top;
+    }
+    .timeline-table tr.high-latency td {
+      background: var(--status-warn-bg);
+    }
+    .scorecard-table tr:hover td,
+    .timeline-table tr:hover td {
+      background: var(--bg-charcoal);
+    }
+
+    .table-scroll { overflow-x: auto; }
+    .muted { color: var(--text-secondary); }
+
+    /* Error banner */
+    .error-banner {
+      background: var(--alert-red-subtle);
+      border: 1px solid var(--alert-red);
+      color: var(--alert-red);
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-sm);
+      margin: 0 0 1rem 0;
+      display: none;
+    }
+
+    /* Status pills and badges (reused from current dashboard) */
+    .status-dot {
+      display: inline-block;
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .status-dot.active { background: var(--status-ok); }
+    .status-dot.inactive { background: var(--text-tertiary); }
+    .status-dot.degraded { background: var(--status-warn); }
+
+    .integrity-badge {
+      display: inline-block;
+      font-size: 0.66rem;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: var(--radius-pill);
+      border: 1px solid transparent;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .integrity-normal {
+      color: var(--integrity-normal);
+      border-color: var(--integrity-normal-border);
+      background: var(--integrity-normal-bg);
+    }
+    .integrity-elevated {
+      color: var(--integrity-elevated);
+      border-color: var(--integrity-elevated-border);
+      background: var(--integrity-elevated-bg);
+    }
+    .integrity-degraded {
+      color: var(--integrity-degraded);
+      border-color: var(--integrity-degraded-border);
+      background: var(--integrity-degraded-bg);
+    }
+    .integrity-unknown {
+      color: var(--integrity-unknown);
+      border-color: var(--integrity-unknown-border);
+      background: var(--integrity-unknown-bg);
+    }
+
+    /* Audit log result colors */
+    .audit-log__action--ok { color: var(--status-ok); }
+    .audit-log__action--blocked { color: var(--alert-red); }
+    .audit-log__action--config { color: var(--status-warn); }
+
+    /* Admin key input */
+    .admin-key-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .admin-key-row label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+    .admin-key-row input {
+      flex: 1;
+      border: 1px solid var(--bg-steel);
+      border-radius: var(--radius-sm);
+      padding: 0.4rem 0.5rem;
+      background: var(--bg-charcoal);
+      color: var(--text-primary);
+      font-size: 0.82rem;
+      font-family: var(--font-sans);
+    }
+
+    /* Collapsible presets */
+    .collapsible-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.5rem 0;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+    .collapsible-header:hover { color: var(--text-primary); }
+    .collapsible-header .chevron {
+      transition: transform 0.2s;
+      font-size: 0.6rem;
+    }
+    .collapsible-header.open .chevron { transform: rotate(90deg); }
+    .collapsible-body {
+      display: none;
+      padding-top: 0.5rem;
+    }
+    .collapsible-body.open { display: block; }
+
+    .preset-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0.55rem;
+      margin-bottom: 0.75rem;
+    }
+    .preset-card {
+      border: 1px solid var(--bg-steel);
+      border-radius: var(--radius-sm);
+      padding: 0.65rem;
+      background: var(--bg-charcoal);
+      font-size: 0.8rem;
+    }
+    .preset-card h4 {
+      margin: 0 0 0.3rem 0;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .preset-card p {
+      margin: 0;
+      color: var(--text-secondary);
+      line-height: 1.35;
+      font-size: 0.78rem;
+    }
+    .recommended-badge {
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 1px 5px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+    }
+    .preset-apply-row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: end;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
+    }
+    .preset-apply-row select {
+      border: 1px solid var(--bg-steel);
+      border-radius: var(--radius-sm);
+      padding: 0.4rem 0.5rem;
+      background: var(--bg-charcoal);
+      color: var(--text-primary);
+      font-size: 0.82rem;
+      font-family: var(--font-sans);
+    }
+    .preset-apply-row button {
+      background: var(--bg-obsidian);
+      border: 1px solid var(--bg-steel);
+      color: var(--text-primary);
+      padding: 0.4rem 0.75rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-family: var(--font-sans);
+    }
+    .preset-apply-row button:hover { border-color: var(--accent); }
+    .preset-feedback {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      margin-top: 0.4rem;
+      min-height: 1em;
+    }
+
+    /* Updated timestamp */
+    .updated-bar {
+      text-align: right;
+      font-size: 0.75rem;
+      color: var(--text-tertiary);
+      margin-bottom: 0.5rem;
+    }
+
+    /* Section spacing */
+    .dashboard-section {
+      margin-bottom: 2rem;
+    }
+    .section-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Navigation -->
+  <nav class="nav" aria-label="Main navigation">
+    <div class="nav__inner">
+      <a href="/dashboard" class="nav__brand">herald <span>/ fleet</span></a>
+      <a href="/dashboard" class="active">Dashboard</a>
+      <a href="/audit-log">Audit Log</a>
+      <a href="/charter">Charter</a>
+      <div class="nav__status">
+        <div class="nav__dot"></div>
+        <span id="nav-agent-count">0 agents</span>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container" id="main-content" role="main">
+
+    <!-- Page header -->
+    <span class="page-badge">CONTROL PLANE</span>
+    <h1 class="page-title">Fleet Dashboard</h1>
+    <p class="page-desc">Manage your agent fleet. Click an agent to configure autonomy tier and view permissions.</p>
+
+    <div id="error-banner" class="error-banner" role="alert"></div>
+
+    <div class="updated-bar" id="last-updated" aria-live="polite">Loading...</div>
+
+    <!-- Stats row -->
+    <div class="stat-row dashboard-section" id="stat-row" role="list" aria-label="Fleet statistics">
+      <div class="stat-card" role="listitem">
+        <div class="stat-card__value stat-card__value--green" id="stat-total">-</div>
+        <div class="stat-card__label">Agents Registered</div>
+      </div>
+      <div class="stat-card" role="listitem">
+        <div class="stat-card__value stat-card__value--blue" id="stat-integrity">-</div>
+        <div class="stat-card__label">Avg Integrity</div>
+      </div>
+      <div class="stat-card" role="listitem">
+        <div class="stat-card__value stat-card__value--amber" id="stat-actions">-</div>
+        <div class="stat-card__label">Actions (24h)</div>
+      </div>
+      <div class="stat-card" role="listitem">
+        <div class="stat-card__value stat-card__value--muted" id="stat-degraded">-</div>
+        <div class="stat-card__label">Degraded</div>
+      </div>
+    </div>
+
+    <!-- Agent fleet -->
+    <div class="dashboard-section">
+      <div class="fleet-grid" id="fleet-grid" role="list" aria-label="Registered agents">
+        <div class="agent-card muted">Loading fleet data...</div>
+      </div>
+    </div>
+
+    <!-- Detail panel (injected by JS on agent select) -->
+    <div id="detail-mount"></div>
+
+    <!-- Audit log -->
+    <div class="dashboard-section">
+      <div class="section-title">Audit Log</div>
+      <div class="audit-log" id="audit-log" aria-label="Recent audit events">
+        <div class="muted" style="padding:0.5rem;">Loading events...</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ═══════════════════════════════════════════
+    // CONFIG & STATE
+    // ═══════════════════════════════════════════
+    const HERALD_URL = window.location.origin;
+    const state = {
+      selectedAgentId: null,
+      refreshTimer: null,
+      adminKey: '',
+      agents: [],
+      presets: [],
+    };
+
+    // ═══════════════════════════════════════════
+    // TIER + PERMISSION DATA (from wireframe)
+    // ═══════════════════════════════════════════
+    const TIERS = {
+      L0: { name: 'Observer', color: '#3b9eff', bg: 'rgba(59,158,255,0.08)' },
+      L1: { name: 'Assistant', color: '#00ff88', bg: 'rgba(0,255,136,0.06)' },
+      L2: { name: 'Operator', color: '#ffb800', bg: 'rgba(255,184,0,0.06)' },
+      L3: { name: 'Autonomous', color: '#ff6b35', bg: 'rgba(255,107,53,0.06)' },
+    };
+
+    const PERMISSIONS = [
+      { key: 'fs_read', label: 'Filesystem Read', icon: '\u{1F4C2}' },
+      { key: 'fs_write', label: 'Filesystem Write', icon: '\u{270F}\u{FE0F}' },
+      { key: 'net_inbound', label: 'Network Inbound', icon: '\u{1F4E1}' },
+      { key: 'net_outbound', label: 'Network Outbound', icon: '\u{1F310}' },
+      { key: 'exec_cmd', label: 'Execute Commands', icon: '\u{2699}\u{FE0F}' },
+      { key: 'api_keys', label: 'Access Credentials', icon: '\u{1F511}' },
+      { key: 'msg_send', label: 'Send Messages (as user)', icon: '\u{1F4AC}' },
+      { key: 'agent_comm', label: 'Inter-Agent Comms', icon: '\u{1F517}' },
+    ];
+
+    const TIER_PERMS = {
+      L0: { fs_read: 'granted', fs_write: 'denied', net_inbound: 'denied', net_outbound: 'denied', exec_cmd: 'denied', api_keys: 'denied', msg_send: 'denied', agent_comm: 'denied' },
+      L1: { fs_read: 'granted', fs_write: 'denied', net_inbound: 'granted', net_outbound: 'denied', exec_cmd: 'denied', api_keys: 'denied', msg_send: 'approval', agent_comm: 'denied' },
+      L2: { fs_read: 'granted', fs_write: 'approval', net_inbound: 'granted', net_outbound: 'granted', exec_cmd: 'approval', api_keys: 'denied', msg_send: 'granted', agent_comm: 'granted' },
+      L3: { fs_read: 'granted', fs_write: 'granted', net_inbound: 'granted', net_outbound: 'granted', exec_cmd: 'granted', api_keys: 'approval', msg_send: 'granted', agent_comm: 'granted' },
+    };
+
+    // ═══════════════════════════════════════════
+    // UTILITIES
+    // ═══════════════════════════════════════════
+    function esc(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function normalizeIntegrity(v) {
+      if (!v) return 'unknown';
+      const n = String(v).toLowerCase();
+      return ['normal', 'elevated', 'degraded', 'unknown'].includes(n) ? n : 'unknown';
+    }
+
+    function fmtMs(v) {
+      if (v === null || v === undefined || Number.isNaN(v)) return '--';
+      return Number(v).toFixed(1);
+    }
+
+    function timeAgo(iso) {
+      if (!iso) return 'never';
+      const diff = Date.now() - new Date(iso).getTime();
+      if (Number.isNaN(diff)) return '-';
+      const s = Math.floor(diff / 1000);
+      if (s < 60) return s + 's ago';
+      const m = Math.floor(s / 60);
+      if (m < 60) return m + 'm ago';
+      const h = Math.floor(m / 60);
+      if (h < 48) return h + 'h ago';
+      return Math.floor(h / 24) + 'd ago';
+    }
+
+    function fmtTime(iso) {
+      if (!iso) return '-';
+      return new Date(iso).toLocaleTimeString();
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('error-banner');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+    function clearError() {
+      document.getElementById('error-banner').style.display = 'none';
+    }
+
+    async function fetchJSON(path, opts = {}) {
+      const r = await fetch(HERALD_URL + path, opts);
+      if (!r.ok) {
+        const t = await r.text();
+        throw new Error(r.status + ' ' + r.statusText + (t ? ' - ' + t.slice(0, 120) : ''));
+      }
+      return r.json();
+    }
+
+    // ═══════════════════════════════════════════
+    // TOAST
+    // ═══════════════════════════════════════════
+    let toastTimer;
+    function showToast(msg) {
+      const el = document.getElementById('toast');
+      el.textContent = '\u2713 ' + msg;
+      el.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+    }
+
+    // ═══════════════════════════════════════════
+    // MAIN REFRESH
+    // ═══════════════════════════════════════════
+    async function refresh() {
+      try {
+        const [health, fleet, events, telemetry, presets] = await Promise.all([
+          fetchJSON('/api/v1/fleet/health'),
+          fetchJSON('/api/v1/fleet/status'),
+          fetchJSON('/api/v1/events?limit=25'),
+          fetchJSON('/api/v1/fleet/telemetry?limit=160'),
+          fetchJSON('/api/v1/policy/presets'),
+        ]);
+
+        const agents = Array.isArray(fleet.agents) ? fleet.agents : [];
+        state.agents = agents;
+        state.presets = Array.isArray(presets.presets) ? presets.presets : [];
+
+        // Resolve selected agent
+        if (state.selectedAgentId) {
+          if (!agents.find(a => a.agent_id === state.selectedAgentId)) {
+            state.selectedAgentId = null;
+          }
+        }
+
+        const selected = state.selectedAgentId
+          ? agents.find(a => a.agent_id === state.selectedAgentId)
+          : null;
+
+        const selectedTelemetry = selected
+          ? await fetchJSON('/api/v1/fleet/telemetry?agent_id=' + encodeURIComponent(selected.agent_id) + '&limit=80')
+          : null;
+
+        clearError();
+        renderStats(health, agents, events);
+        renderFleet(agents);
+        renderDetail(selected, selectedTelemetry);
+        renderAuditLog(events);
+        document.getElementById('last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+        document.getElementById('nav-agent-count').textContent = (health.total || 0) + ' agents';
+      } catch (err) {
+        showError('Cannot reach Herald at ' + HERALD_URL + ' \u2014 ' + err.message);
+      }
+    }
+
+    // ═══════════════════════════════════════════
+    // STATS ROW
+    // ═══════════════════════════════════════════
+    function renderStats(health, agents, events) {
+      document.getElementById('stat-total').textContent = health.total || 0;
+      document.getElementById('stat-degraded').textContent = health.degraded || 0;
+
+      // Average integrity score
+      const scores = agents
+        .map(a => a.integrity_score)
+        .filter(s => s !== null && s !== undefined);
+      if (scores.length) {
+        const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+        document.getElementById('stat-integrity').textContent = avg;
+      } else {
+        document.getElementById('stat-integrity').textContent = '--';
+      }
+
+      // Actions in last 24h
+      const cutoff = Date.now() - 86400000;
+      const recent = (events.events || []).filter(e =>
+        e.action !== 'heartbeat' && new Date(e.timestamp).getTime() > cutoff
+      );
+      document.getElementById('stat-actions').textContent = recent.length;
+    }
+
+    // ═══════════════════════════════════════════
+    // FLEET GRID (wireframe card layout, live data)
+    // ═══════════════════════════════════════════
+    function renderFleet(agents) {
+      const grid = document.getElementById('fleet-grid');
+      if (!agents.length) {
+        grid.innerHTML = '<div class="agent-card muted">No agents registered.</div>';
+        return;
+      }
+
+      grid.innerHTML = agents.map(a => {
+        const tier = a.tier || 'L0';
+        const tierInfo = TIERS[tier] || TIERS.L0;
+        const integrity = normalizeIntegrity(a.integrity_status);
+        const sel = a.agent_id === state.selectedAgentId ? 'selected' : '';
+        const statusClass = a.status === 'active' ? 'online' : a.status === 'degraded' ? 'degraded' : 'offline';
+
+        return `
+          <div class="agent-card ${sel}"
+               style="--card-tier-color: ${tierInfo.color}"
+               data-agent-id="${esc(a.agent_id)}"
+               role="listitem" tabindex="0"
+               aria-label="${esc(a.display_name || a.agent_id)} - ${integrity}">
+            <div class="agent-card__head">
+              <div class="agent-card__dot agent-card__dot--${statusClass}"></div>
+              <div class="agent-card__name">${esc(a.display_name || a.agent_id)}</div>
+              <div class="agent-card__tier" style="color:${tierInfo.color};background:${tierInfo.bg};border:1px solid ${tierInfo.color}30;">
+                ${esc(tier)} ${esc(tierInfo.name)}
+              </div>
+            </div>
+            <div class="agent-card__meta">
+              <div class="agent-card__row">
+                <span class="agent-card__row-label">Integrity</span>
+                <span class="agent-card__row-value">${a.integrity_score != null ? a.integrity_score : '--'} <span class="integrity-badge integrity-${integrity}" style="font-size:0.6rem;vertical-align:middle;">${integrity}</span></span>
+              </div>
+              <div class="agent-card__row">
+                <span class="agent-card__row-label">RTT / Jitter</span>
+                <span class="agent-card__row-value">${fmtMs(a.last_network_rtt_ms)} / ${fmtMs(a.last_network_jitter_ms)} ms</span>
+              </div>
+              <div class="agent-card__row">
+                <span class="agent-card__row-label">Probe Source</span>
+                <span class="agent-card__row-value">${esc(a.last_probe_source || '-')}</span>
+              </div>
+              ${a.observed_provider || a.observed_model ? `<div class="agent-card__row">
+                <span class="agent-card__row-label">Runtime</span>
+                <span class="agent-card__row-value">${esc(a.observed_provider || '-')} / ${esc((a.observed_model || '').replace('claude-', ''))}</span>
+              </div>` : ''}
+              <div class="agent-card__row">
+                <span class="agent-card__row-label">Last Activity</span>
+                <span class="agent-card__row-value" style="font-family:var(--font-sans);font-size:0.78rem;color:var(--text-secondary);">${timeAgo(a.last_telemetry || a.last_heartbeat)}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Bind clicks
+      grid.querySelectorAll('[data-agent-id]').forEach(card => {
+        function select() {
+          const id = card.getAttribute('data-agent-id');
+          if (state.selectedAgentId === id) {
+            state.selectedAgentId = null;
+          } else {
+            state.selectedAgentId = id;
+          }
+          refresh();
+        }
+        card.addEventListener('click', select);
+        card.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(); }
+        });
+      });
+    }
+
+    // ═══════════════════════════════════════════
+    // DETAIL PANEL (governance + telemetry)
+    // ═══════════════════════════════════════════
+    function renderDetail(agent, telemetryData) {
+      const mount = document.getElementById('detail-mount');
+      if (!agent) {
+        mount.innerHTML = '';
+        return;
+      }
+
+      const tier = agent.tier || 'L0';
+      const tierInfo = TIERS[tier] || TIERS.L0;
+      const perms = TIER_PERMS[tier] || TIER_PERMS.L0;
+      const integrity = normalizeIntegrity(agent.integrity_status);
+      const metrics = telemetryData && telemetryData.summary && telemetryData.summary.metrics
+        ? telemetryData.summary.metrics : {};
+      const timeline = telemetryData && Array.isArray(telemetryData.telemetry)
+        ? telemetryData.telemetry.slice(0, 15) : [];
+
+      // Build preset cards HTML
+      const presetCardsHtml = state.presets.length
+        ? state.presets.map(p => {
+            const integ = p.integrity || {};
+            return `
+              <div class="preset-card">
+                <h4>${esc(p.label || p.name)} ${p.recommended ? '<span class="recommended-badge">recommended</span>' : ''}</h4>
+                <p>${esc(p.description || '')}</p>
+                <p style="margin-top:0.3rem;">RTT \u2264 ${fmtMs(integ.max_network_rtt_ms)}ms, Jitter \u2264 ${fmtMs(integ.max_network_jitter_ms)}ms</p>
+              </div>
+            `;
+          }).join('')
+        : '<div class="muted">No presets available.</div>';
+
+      const presetOptions = state.presets.map(p =>
+        '<option value="' + esc(p.name) + '">' + esc(p.label || p.name) + '</option>'
+      ).join('');
+
+      mount.innerHTML = `
+        <div class="detail-panel dashboard-section">
+          <div class="detail-panel__header">
+            <div class="detail-panel__title">
+              <span style="color:${tierInfo.color};">\u25CF</span>
+              Configure: ${esc(agent.display_name || agent.agent_id)}
+            </div>
+            <button class="detail-panel__close" id="close-detail" aria-label="Close detail panel">&times;</button>
+          </div>
+          <div class="detail-panel__body">
+
+            <!-- Admin key -->
+            <div class="admin-key-row">
+              <label for="admin-key-input">Herald API Key</label>
+              <input id="admin-key-input" type="password" placeholder="Required for tier changes" value="${esc(state.adminKey)}">
+            </div>
+
+            <div class="detail-grid">
+              <!-- LEFT: Governance -->
+              <div>
+                <div class="detail-panel__section">
+                  <div class="detail-panel__section-title">Autonomy Tier</div>
+                  <div class="tier-selector">
+                    ${Object.entries(TIERS).map(([key, t]) => `
+                      <div class="tier-option ${tier === key ? 'active' : ''}"
+                           style="--tier-color:${t.color};--tier-bg:${t.bg};"
+                           data-tier="${key}" role="button" tabindex="0">
+                        <div class="tier-option__label" style="color:${tier === key ? t.color : 'var(--text-secondary)'};">${key}</div>
+                        <div class="tier-option__name">${t.name}</div>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+
+                <div class="detail-panel__section">
+                  <div class="detail-panel__section-title">Effective Permissions</div>
+                  <div class="perm-grid" id="perm-grid">
+                    ${PERMISSIONS.map(p => {
+                      const st = perms[p.key];
+                      return `
+                        <div class="perm-row" id="perm-${p.key}">
+                          <span class="perm-row__label">
+                            <span class="perm-row__icon">${p.icon}</span>
+                            ${p.label}
+                          </span>
+                          <span class="perm-row__status perm-row__status--${st}">
+                            ${st === 'granted' ? 'GRANTED' : st === 'denied' ? 'DENIED' : 'APPROVAL'}
+                          </span>
+                        </div>
+                      `;
+                    }).join('')}
+                  </div>
+                </div>
+
+                <!-- Collapsible presets -->
+                <div class="detail-panel__section">
+                  <button class="collapsible-header" id="presets-toggle">
+                    <span class="chevron">\u25B6</span> Policy Presets
+                  </button>
+                  <div class="collapsible-body" id="presets-body">
+                    <div class="preset-grid">${presetCardsHtml}</div>
+                    <div class="preset-apply-row">
+                      <select id="preset-select">${presetOptions}</select>
+                      <button id="apply-preset-btn" type="button">Apply Preset</button>
+                    </div>
+                    <div class="preset-feedback" id="preset-feedback" aria-live="polite"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- RIGHT: Telemetry -->
+              <div>
+                <div class="detail-panel__section">
+                  <div class="detail-panel__section-title">Telemetry</div>
+                  <div class="metric-grid" role="list" aria-label="Agent metrics">
+                    <div class="metric-card" role="listitem">
+                      <div class="label">Network RTT</div>
+                      <div class="value">${fmtMs(agent.last_network_rtt_ms)} <span class="muted" style="font-size:0.75rem;">ms</span></div>
+                    </div>
+                    <div class="metric-card" role="listitem">
+                      <div class="label">Jitter</div>
+                      <div class="value">${fmtMs(agent.last_network_jitter_ms)} <span class="muted" style="font-size:0.75rem;">ms</span></div>
+                    </div>
+                    <div class="metric-card" role="listitem">
+                      <div class="label">HID RTT</div>
+                      <div class="value">${fmtMs(agent.last_sensor_hid_rtt_ms)} <span class="muted" style="font-size:0.75rem;">ms</span></div>
+                    </div>
+                    <div class="metric-card" role="listitem">
+                      <div class="label">Integrity Score</div>
+                      <div class="value">${agent.integrity_score != null ? agent.integrity_score : '--'} <span class="integrity-badge integrity-${integrity}" style="font-size:0.6rem;vertical-align:middle;">${integrity}</span></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="detail-panel__section">
+                  <div class="detail-panel__section-title">Scorecard</div>
+                  <div class="table-scroll">
+                    <table class="scorecard-table" aria-label="Telemetry scorecard">
+                      <thead><tr>
+                        <th>Metric</th><th>Latest</th><th>Mean</th><th>P50</th><th>P95</th><th>Min</th><th>Max</th>
+                      </tr></thead>
+                      <tbody>
+                        ${scorecardRow('Network RTT', metrics.network_rtt_ms)}
+                        ${scorecardRow('Jitter', metrics.network_jitter_ms)}
+                        ${scorecardRow('HID RTT', metrics.sensor_hid_rtt_ms)}
+                        ${scorecardRow('Dwell', metrics.sensor_dwell_ms)}
+                        ${scorecardRow('OS Jitter', metrics.sensor_os_jitter_ms)}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div class="detail-panel__section">
+                  <div class="detail-panel__section-title">Timeline (last 15)</div>
+                  <div class="table-scroll">
+                    <table class="timeline-table" aria-label="Telemetry timeline">
+                      <thead><tr>
+                        <th>Time</th><th>Probe</th><th>RTT</th><th>Jitter</th><th>Status</th>
+                      </tr></thead>
+                      <tbody>
+                        ${timeline.length ? timeline.map(row => {
+                          const rs = normalizeIntegrity(row.integrity_status);
+                          const cls = ['elevated', 'degraded'].includes(rs) ? 'high-latency' : '';
+                          return '<tr class="' + cls + '">' +
+                            '<td>' + fmtTime(row.timestamp) + '</td>' +
+                            '<td>' + esc(row.probe_source || '-') + '</td>' +
+                            '<td>' + fmtMs(row.network_rtt_ms) + '</td>' +
+                            '<td>' + fmtMs(row.network_jitter_ms) + '</td>' +
+                            '<td><span class="integrity-badge integrity-' + rs + '">' + rs + '</span></td>' +
+                            '</tr>';
+                        }).join('') : '<tr><td colspan="5" class="muted">No telemetry samples yet.</td></tr>'}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Bind events
+      document.getElementById('close-detail').addEventListener('click', () => {
+        state.selectedAgentId = null;
+        refresh();
+      });
+
+      document.getElementById('admin-key-input').addEventListener('input', e => {
+        state.adminKey = e.target.value;
+      });
+
+      // Tier selector
+      mount.querySelectorAll('[data-tier]').forEach(btn => {
+        function doChange() {
+          const newTier = btn.getAttribute('data-tier');
+          if (newTier === tier) return;
+          changeTier(agent.agent_id, newTier);
+        }
+        btn.addEventListener('click', doChange);
+        btn.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doChange(); }
+        });
+      });
+
+      // Collapsible presets
+      const toggle = document.getElementById('presets-toggle');
+      const body = document.getElementById('presets-body');
+      toggle.addEventListener('click', () => {
+        toggle.classList.toggle('open');
+        body.classList.toggle('open');
+      });
+
+      // Apply preset
+      const applyBtn = document.getElementById('apply-preset-btn');
+      if (applyBtn) {
+        applyBtn.addEventListener('click', () => applyPreset(agent.agent_id));
+      }
+
+      mount.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function scorecardRow(label, metric) {
+      if (!metric) {
+        return '<tr><td>' + esc(label) + '</td><td colspan="6" class="muted">No samples</td></tr>';
+      }
+      return '<tr><td>' + esc(label) + '</td>' +
+        '<td>' + fmtMs(metric.latest) + '</td>' +
+        '<td>' + fmtMs(metric.mean) + '</td>' +
+        '<td>' + fmtMs(metric.p50) + '</td>' +
+        '<td>' + fmtMs(metric.p95) + '</td>' +
+        '<td>' + fmtMs(metric.min) + '</td>' +
+        '<td>' + fmtMs(metric.max) + '</td></tr>';
+    }
+
+    // ═══════════════════════════════════════════
+    // TIER CHANGE (calls API)
+    // ═══════════════════════════════════════════
+    async function changeTier(agentId, newTier) {
+      if (!state.adminKey) {
+        showToast('Enter Herald API Key to change tier');
+        return;
+      }
+
+      try {
+        await fetchJSON('/api/v1/agents/' + encodeURIComponent(agentId) + '/policy', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Herald-Key': state.adminKey,
+          },
+          body: JSON.stringify({ tier: newTier }),
+        });
+
+        const agent = state.agents.find(a => a.agent_id === agentId);
+        const name = agent ? (agent.display_name || agent.agent_id) : agentId;
+        showToast(name + ' updated to ' + newTier + ' ' + (TIERS[newTier] || {}).name);
+        await refresh();
+      } catch (err) {
+        showToast('Tier change failed: ' + err.message);
+      }
+    }
+
+    // ═══════════════════════════════════════════
+    // APPLY PRESET
+    // ═══════════════════════════════════════════
+    async function applyPreset(agentId) {
+      const feedback = document.getElementById('preset-feedback');
+      const preset = document.getElementById('preset-select').value;
+      if (!preset) { feedback.textContent = 'Select a preset.'; return; }
+      if (!state.adminKey) { feedback.textContent = 'API key required.'; return; }
+
+      feedback.textContent = 'Applying...';
+      try {
+        await fetchJSON('/api/v1/agents/' + encodeURIComponent(agentId) + '/policy/preset', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Herald-Key': state.adminKey,
+          },
+          body: JSON.stringify({ preset }),
+        });
+        showToast('Applied ' + preset + ' to ' + agentId);
+        feedback.textContent = 'Applied.';
+        await refresh();
+      } catch (err) {
+        feedback.textContent = 'Failed: ' + err.message;
+      }
+    }
+
+    // ═══════════════════════════════════════════
+    // AUDIT LOG (wireframe format, live data)
+    // ═══════════════════════════════════════════
+    function renderAuditLog(data) {
+      const log = document.getElementById('audit-log');
+      const events = (data.events || []).filter(e => e.action !== 'heartbeat');
+      if (!events.length) {
+        log.innerHTML = '<div class="muted" style="padding:0.5rem;">No events yet.</div>';
+        return;
+      }
+
+      log.innerHTML = events.map(e => {
+        const typeClass = e.result === 'ok' ? 'ok'
+          : e.result === 'blocked' || e.result === 'denied' ? 'blocked'
+          : (e.action || '').includes('config') || (e.action || '').includes('policy') || (e.action || '').includes('tier') ? 'config'
+          : '';
+        return `
+          <div class="audit-log__entry">
+            <span class="audit-log__time">${fmtTime(e.timestamp)}</span>
+            <span class="audit-log__agent">${esc(e.agent_id || '-')}</span>
+            <span class="audit-log__action ${typeClass ? 'audit-log__action--' + typeClass : ''}">
+              ${esc(e.action)}${e.detail ? ' \u2014 ' + esc(String(e.detail).slice(0, 80)) : ''}
+              <span class="muted">[${esc(e.result || '-')}]</span>
+            </span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ═══════════════════════════════════════════
+    // AUTO-REFRESH
+    // ═══════════════════════════════════════════
+    function startAutoRefresh() {
+      if (state.refreshTimer) clearInterval(state.refreshTimer);
+      state.refreshTimer = setInterval(refresh, 5000);
+    }
+
+    // ═══════════════════════════════════════════
+    // INIT
+    // ═══════════════════════════════════════════
+    refresh();
+    startAutoRefresh();
+  </script>
+</body>
+</html>

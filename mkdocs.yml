@@ -1,0 +1,64 @@
+site_name: Herald Protocol
+site_description: Governance protocol for AI agent fleets
+site_url: https://watthem.github.io/herald
+repo_url: https://github.com/watthem/herald
+repo_name: watthem/herald
+
+theme:
+  name: material
+  palette:
+    scheme: slate
+    primary: teal
+    accent: amber
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - content.code.copy
+  icon:
+    repo: fontawesome/brands/github
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - tables
+  - attr_list
+  - toc:
+      permalink: true
+
+nav:
+  - Overview:
+    - "What is Herald?": index.md
+    - "The Trust Boundary": trust-boundary.md
+    - "Architecture": ARCHITECTURE.md
+  - Getting Started:
+    - "Quickstart": quickstart.md
+    - "Local Development": local-development.md
+    - "Connecting Your First Agent": first-agent.md
+  - Core Concepts:
+    - "Autonomy Tiers (L0-L3)": autonomy-tiers.md
+    - "The Sidecar Pattern": sidecar.md
+    - "Protected Actions & Approvals": protected-actions.md
+  - Protocol & API:
+    - "Protocol Specification": PROTOCOL.md
+    - "API Reference": api-reference.md
+    - "Sensor Integration": sensor-integration.md
+  - Deployment & Ops:
+    - "Hardware Recommendations": hardware.md
+    - "Dashboard Setup": dashboard.md
+    - "Security & Air-Gapping": security.md
+  - Contributing:
+    - "Contributor Guide": contributing.md
+    - "Design System": DESIGN.md
+    - "AI Agent Rules (CLAUDE.md)": claude-contributor.md

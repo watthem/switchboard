@@ -1,0 +1,75 @@
+# Herald — Ruby Agent Example
+#
+# Demonstrates a Ruby agent governed by the Herald protocol.
+# The sidecar handles all governance plumbing. The agent just
+# reads policy and posts events to localhost.
+#
+# Usage:
+#   docker compose up
+#
+# What happens:
+#   1. Herald starts (governance protocol endpoint)
+#   2. Sidecar registers the agent, pulls policy, starts heartbeats
+#   3. Your Ruby agent reads policy from /herald/policy.json
+#      and posts events to http://localhost:9100/events
+#
+# To use with YOUR agent instead of the example:
+#   - Replace the 'ruby-agent' service with your own image
+#   - Keep the sidecar and herald services as-is
+#   - Mount the 'policy' volume read-only into your agent container
+
+services:
+  # ── Herald (governance protocol endpoint) ──────────────
+  herald:
+    build:
+      context: ../../herald
+      dockerfile: ../Dockerfile.herald
+    ports:
+      - "59237:59237"
+    environment:
+      HERALD_API_KEY: ""  # Empty = dev mode (no auth required)
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:59237/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
+  # ── Sidecar (governance bridge for the agent) ──────────
+  sidecar:
+    build:
+      context: ../../sidecar
+    environment:
+      HERALD_URL: http://herald:59237
+      AGENT_ID: ruby-demo-agent
+      AGENT_DISPLAY_NAME: "Rails Engineer's Agent"
+      AGENT_TIER: L1
+      POLICY_FORMAT: json
+      POLICY_PATH: /herald/policy.json
+      EVENT_LISTEN_PORT: "9100"
+      ALLOWED_ACTIONS: "read_data,query_api,send_notification"
+      AGENT_CHANNELS: "ops,alerts"
+    volumes:
+      - policy:/herald
+    depends_on:
+      herald:
+        condition: service_healthy
+    # The sidecar listens on 9100 but only the agent needs to reach it
+    # (they share a network). No need to expose externally.
+
+  # ── Your Agent ─────────────────────────────────────────
+  # Replace this with your own agent image. The only requirements:
+  #   1. Read policy from /herald/policy.json (or whatever format)
+  #   2. POST events to http://sidecar:9100/events
+  ruby-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - policy:/herald:ro  # Read-only policy access
+    depends_on:
+      - sidecar
+    environment:
+      SIDECAR_URL: http://sidecar:9100
+
+volumes:
+  policy:
