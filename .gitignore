@@ -29,5 +29,8 @@ site/
 # Node
 node_modules/
 
+# Playwright
+test-results/
+
 # Agent tokens
 .switchboard-token

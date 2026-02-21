@@ -8,8 +8,9 @@ test.describe("Switchboard Dashboard Screenshots", () => {
   test.beforeAll(async () => {
     // Seed demo data so the dashboard has agents to show
     try {
-      execSync("SWITCHBOARD_API_KEY=demo-key python3 scripts/seed-demo-data.py", {
-        cwd: path.resolve(__dirname, ".."),
+      const root = path.resolve(__dirname, "..");
+      execSync(".venv/bin/python3 scripts/seed-demo-data.py", {
+        cwd: root,
         env: { ...process.env, SWITCHBOARD_API_KEY: "demo-key" },
         stdio: "pipe",
       });
@@ -20,7 +21,7 @@ test.describe("Switchboard Dashboard Screenshots", () => {
   });
 
   test("fleet dashboard overview", async ({ page }) => {
-    await page.goto("http://localhost:59238/dashboard");
+    await page.goto("http://localhost:59237/dashboard");
     await page.waitForTimeout(1500); // wait for API calls + render
 
     await page.screenshot({
@@ -30,7 +31,7 @@ test.describe("Switchboard Dashboard Screenshots", () => {
   });
 
   test("agent detail panel", async ({ page }) => {
-    await page.goto("http://localhost:59238/dashboard");
+    await page.goto("http://localhost:59237/dashboard");
     await page.waitForTimeout(1000);
 
     // Click on the first agent card to open detail panel
@@ -47,7 +48,7 @@ test.describe("Switchboard Dashboard Screenshots", () => {
   });
 
   test("health endpoint", async ({ page }) => {
-    await page.goto("http://localhost:59238/health");
+    await page.goto("http://localhost:59237/health");
     await page.waitForTimeout(500);
 
     await page.screenshot({
