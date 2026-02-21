@@ -1,4 +1,4 @@
-"""Shared fixtures for Herald test suite."""
+"""Shared fixtures for Switchboard test suite."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ ADMIN_KEY = "test-admin-key-abc123"
 @pytest.fixture(autouse=True)
 def _isolate_storage(monkeypatch, tmp_path):
     """Redirect all file-backed storage to a temp directory per test."""
-    import herald.v1.services as svc
+    import switchboard.v1.services as svc
 
     data_dir = tmp_path / "data" / "v1"
     monkeypatch.setattr(svc, "_DATA_DIR", data_dir)
@@ -22,21 +22,21 @@ def _isolate_storage(monkeypatch, tmp_path):
 
 @pytest.fixture
 def admin_key(monkeypatch):
-    """Set HERALD_API_KEY and return the key string."""
-    monkeypatch.setenv("HERALD_API_KEY", ADMIN_KEY)
+    """Set SWITCHBOARD_API_KEY and return the key string."""
+    monkeypatch.setenv("SWITCHBOARD_API_KEY", ADMIN_KEY)
     return ADMIN_KEY
 
 
 @pytest.fixture
 def admin_headers(admin_key):
-    """Headers dict with X-Herald-Key for admin endpoints."""
-    return {"X-Herald-Key": admin_key}
+    """Headers dict with X-Switchboard-Key for admin endpoints."""
+    return {"X-Switchboard-Key": admin_key}
 
 
 @pytest.fixture
 def client():
     """FastAPI TestClient with isolated storage (via autouse fixture)."""
-    from herald.app import create_app
+    from switchboard.app import create_app
 
     return TestClient(create_app())
 

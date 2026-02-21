@@ -1,6 +1,6 @@
 # Protected Actions & Approvals
 
-Herald controls what agents can and cannot do through policy-defined action lists and tier-level enforcement.
+Switchboard controls what agents can and cannot do through policy-defined action lists and tier-level enforcement.
 
 ---
 
@@ -17,7 +17,7 @@ Every event an agent emits has an `action` field — a string describing what th
 }
 ```
 
-Herald's policy system controls which actions are allowed:
+Switchboard's policy system controls which actions are allowed:
 
 ```json
 {
@@ -62,7 +62,7 @@ Action policy works alongside [tier enforcement](autonomy-tiers.md):
 ```bash
 curl -X PUT http://localhost:59237/api/v1/agents/my-agent/policy \
   -H "Content-Type: application/json" \
-  -H "X-Herald-Key: $HERALD_API_KEY" \
+  -H "X-Switchboard-Key: $SWITCHBOARD_API_KEY" \
   -d '{
     "allowed_actions": ["file_read", "file_write"],
     "denied_actions": ["delete_records"],

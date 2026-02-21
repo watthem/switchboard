@@ -3,7 +3,7 @@ requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "herald"
+name = "switchboard"
 version = "2026.2.19.dev0"
 description = "Governance protocol for AI agent fleets"
 readme = "README.md"
@@ -31,4 +31,4 @@ dev = [
 testpaths = ["tests"]
 
 [tool.setuptools.packages.find]
-include = ["herald*"]
+include = ["switchboard*"]

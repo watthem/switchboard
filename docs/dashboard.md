@@ -1,20 +1,22 @@
 # Dashboard Setup
 
-Herald serves a fleet integrity dashboard as a single HTML page — no build tools, no JS framework, no external dependencies.
+Switchboard serves a fleet integrity dashboard as a single HTML page — no build tools, no JS framework, no external dependencies.
 
 ---
 
 ## Accessing the Dashboard
 
-Start Herald and navigate to:
+Start Switchboard and navigate to:
 
 ```
 http://localhost:59237/dashboard
 ```
 
-The dashboard is served directly by the Herald API. No separate build step or static file server needed.
+The dashboard is served directly by the Switchboard API. No separate build step or static file server needed.
 
 ## What the Dashboard Shows
+
+![Fleet Dashboard](assets/screenshots/fleet-dashboard.png)
 
 ### Fleet Overview
 
@@ -37,6 +39,8 @@ Each registered agent shows:
 
 Click an agent card to see:
 
+![Agent Detail Panel — tier selector, permissions, telemetry scorecard](assets/screenshots/agent-detail.png)
+
 - **Tier selector** — change the agent's autonomy tier (requires admin key)
 - **Permission grid** — allowed and denied actions
 - **Telemetry scorecard** — RTT/jitter statistics (min, max, p50, p95)
@@ -55,4 +59,4 @@ The dashboard uses design tokens from `docs/shared.css` — a dark-theme system 
 
 ## Customization
 
-The dashboard is a single HTML file at `dashboard/index.html`. It fetches data from the Herald API using standard `fetch()` calls. You can modify it directly — no build step required.
+The dashboard is a single HTML file at `dashboard/index.html`. It fetches data from the Switchboard API using standard `fetch()` calls. You can modify it directly — no build step required.

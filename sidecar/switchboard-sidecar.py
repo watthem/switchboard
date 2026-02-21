@@ -1,23 +1,23 @@
 #!/usr/bin/env python3
-"""Herald Sidecar — connects any agent to the Herald governance protocol.
+"""Switchboard Sidecar — connects any agent to the Switchboard governance protocol.
 
 Zero external dependencies. Runs alongside your agent container.
 
 Usage:
     # With config file:
-    python herald-sidecar.py --config herald-sidecar.yaml
+    python switchboard-sidecar.py --config switchboard-sidecar.yaml
 
     # With environment variables:
-    HERALD_URL=http://herald:59237 AGENT_ID=my-agent python herald-sidecar.py
+    SWITCHBOARD_URL=http://switchboard:59237 AGENT_ID=my-agent python switchboard-sidecar.py
 
     # Register a new agent (prints token):
-    python herald-sidecar.py --register --tier L1
+    python switchboard-sidecar.py --register --tier L1
 
 What it does:
-    1. Registers with Herald (or uses existing token)
+    1. Registers with Switchboard (or uses existing token)
     2. Pulls policy and writes it locally for your agent to read
     3. Listens on localhost:9100 for events from your agent
-    4. Forwards events to Herald with auth
+    4. Forwards events to Switchboard with auth
     5. Sends heartbeats every 30s
 """
 
@@ -54,12 +54,12 @@ log = logging.getLogger("sidecar")
 def load_config() -> dict:
     """Load config from YAML file, env vars, or CLI args."""
     config = {
-        "herald_url": os.getenv("HERALD_URL", "http://localhost:59237"),
+        "switchboard_url": os.getenv("SWITCHBOARD_URL", "http://localhost:59237"),
         "agent_id": os.getenv("AGENT_ID", ""),
         "sidecar_token": os.getenv("SIDECAR_TOKEN", ""),
-        "admin_key": os.getenv("HERALD_API_KEY", ""),
+        "admin_key": os.getenv("SWITCHBOARD_API_KEY", ""),
         "policy_format": os.getenv("POLICY_FORMAT", "json"),
-        "policy_path": os.getenv("POLICY_PATH", "/herald/policy.json"),
+        "policy_path": os.getenv("POLICY_PATH", "/switchboard/policy.json"),
         "event_listen_port": int(os.getenv("EVENT_LISTEN_PORT", "9100")),
         "heartbeat_interval": int(os.getenv("HEARTBEAT_INTERVAL", "30")),
         "tier": os.getenv("AGENT_TIER", "L0"),
@@ -123,24 +123,24 @@ def load_config() -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Herald HTTP client
+# Switchboard HTTP client
 # ---------------------------------------------------------------------------
 
-def herald_request(
+def switchboard_request(
     config: dict,
     method: str,
     path: str,
     body: dict | None = None,
     use_token: bool = False,
 ) -> dict | None:
-    """Make an HTTP request to Herald. Returns parsed JSON or None."""
-    url = f"{config['herald_url']}{path}"
+    """Make an HTTP request to Switchboard. Returns parsed JSON or None."""
+    url = f"{config['switchboard_url']}{path}"
     headers = {"Content-Type": "application/json"}
 
     if use_token and config.get("sidecar_token"):
         headers["Authorization"] = f"Bearer {config['sidecar_token']}"
     elif config.get("admin_key"):
-        headers["X-Herald-Key"] = config["admin_key"]
+        headers["X-Switchboard-Key"] = config["admin_key"]
 
     data = json.dumps(body).encode() if body else None
     req = Request(url, data=data, headers=headers, method=method)
@@ -154,10 +154,10 @@ def herald_request(
             body_text = e.read().decode()
         except Exception:
             pass
-        log.error("Herald %s %s → %d: %s", method, path, e.code, body_text[:200])
+        log.error("Switchboard %s %s → %d: %s", method, path, e.code, body_text[:200])
         return None
     except URLError as e:
-        log.error("Herald unreachable at %s: %s", url, e.reason)
+        log.error("Switchboard unreachable at %s: %s", url, e.reason)
         return None
 
 
@@ -166,7 +166,7 @@ def herald_request(
 # ---------------------------------------------------------------------------
 
 def register_agent(config: dict) -> str | None:
-    """Register this agent with Herald. Returns sidecar token."""
+    """Register this agent with Switchboard. Returns sidecar token."""
     allowed = (
         [a.strip() for a in config["allowed_actions"].split(",") if a.strip()]
         if isinstance(config["allowed_actions"], str)
@@ -186,7 +186,7 @@ def register_agent(config: dict) -> str | None:
         "channels": channels,
     }
 
-    result = herald_request(config, "POST", "/api/v1/agents", body)
+    result = switchboard_request(config, "POST", "/api/v1/agents", body)
     if result and result.get("ok"):
         token = result["token"]
         log.info("Registered agent '%s' — token: %s...", config["agent_id"], token[:20])
@@ -206,8 +206,8 @@ def register_agent(config: dict) -> str | None:
 # ---------------------------------------------------------------------------
 
 def pull_policy(config: dict) -> dict | None:
-    """Fetch current policy from Herald."""
-    result = herald_request(
+    """Fetch current policy from Switchboard."""
+    result = switchboard_request(
         config, "GET",
         f"/api/v1/agents/{config['agent_id']}/policy",
         use_token=True,
@@ -236,7 +236,7 @@ def write_policy(config: dict, policy: dict) -> None:
             return
     elif fmt == "env":
         lines = []
-        lines.append(f"HERALD_AGENT_ID={policy.get('agent_id', '')}")
+        lines.append(f"SWITCHBOARD_AGENT_ID={policy.get('agent_id', '')}")
         lines.append(f"HERALD_TIER={policy.get('tier', '')}")
         lines.append(f"HERALD_VERSION={policy.get('version', '')}")
         lines.append(f"HERALD_ALLOWED_ACTIONS={','.join(policy.get('allowed_actions', []))}")
@@ -269,7 +269,7 @@ def write_policy(config: dict, policy: dict) -> None:
 
 
 def policy_sync_loop(config: dict, stop_event: threading.Event) -> None:
-    """Periodically pull policy from Herald and write locally."""
+    """Periodically pull policy from Switchboard and write locally."""
     last_version = -1
     while not stop_event.is_set():
         policy = pull_policy(config)
@@ -309,9 +309,9 @@ def _detect_remote_session(config: dict) -> bool:
     return False
 
 
-def _measure_herald_rtt_ms(config: dict) -> float | None:
-    """Measure network RTT to Herald health endpoint."""
-    url = f"{config['herald_url']}/health"
+def _measure_switchboard_rtt_ms(config: dict) -> float | None:
+    """Measure network RTT to Switchboard health endpoint."""
+    url = f"{config['switchboard_url']}/health"
     req = Request(url, method="GET")
     start = perf_counter()
     try:
@@ -328,7 +328,7 @@ def telemetry_loop(config: dict, stop_event: threading.Event) -> None:
     rtt_samples: deque[float] = deque(maxlen=20)
 
     while not stop_event.is_set():
-        rtt_ms = _measure_herald_rtt_ms(config)
+        rtt_ms = _measure_switchboard_rtt_ms(config)
         if rtt_ms is not None:
             rtt_samples.append(rtt_ms)
 
@@ -354,12 +354,12 @@ def telemetry_loop(config: dict, stop_event: threading.Event) -> None:
             "sensor_os_jitter_ms": _parse_optional_float(config.get("sensor_os_jitter_ms")),
         }
 
-        herald_request(config, "POST", "/api/v1/telemetry", payload, use_token=True)
+        switchboard_request(config, "POST", "/api/v1/telemetry", payload, use_token=True)
         stop_event.wait(interval)
 
 
 def heartbeat_loop(config: dict, stop_event: threading.Event) -> None:
-    """Send periodic heartbeats to Herald."""
+    """Send periodic heartbeats to Switchboard."""
     while not stop_event.is_set():
         event = {
             "agent_id": config["agent_id"],
@@ -368,7 +368,7 @@ def heartbeat_loop(config: dict, stop_event: threading.Event) -> None:
             "target": "self",
             "result": "success",
         }
-        herald_request(config, "POST", "/api/v1/events", event, use_token=True)
+        switchboard_request(config, "POST", "/api/v1/events", event, use_token=True)
         stop_event.wait(config["heartbeat_interval"])
 
 
@@ -377,7 +377,7 @@ def heartbeat_loop(config: dict, stop_event: threading.Event) -> None:
 # ---------------------------------------------------------------------------
 
 class EventHandler(BaseHTTPRequestHandler):
-    """Accepts events from the agent on localhost and forwards to Herald."""
+    """Accepts events from the agent on localhost and forwards to Switchboard."""
 
     config: dict = {}
 
@@ -401,8 +401,8 @@ class EventHandler(BaseHTTPRequestHandler):
         # Ensure agent_id matches
         event["agent_id"] = self.config["agent_id"]
 
-        # Forward to Herald
-        result = herald_request(
+        # Forward to Switchboard
+        result = switchboard_request(
             self.config, "POST", "/api/v1/events", event, use_token=True
         )
 
@@ -412,7 +412,7 @@ class EventHandler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps(result).encode())
         else:
-            self.send_error(502, "Failed to forward event to Herald")
+            self.send_error(502, "Failed to forward event to Switchboard")
 
     def do_GET(self):
         if self.path == "/health":
@@ -508,7 +508,7 @@ def main():
     log.info("  Events:    POST http://localhost:%d/events", port)
     log.info("  Health:    GET  http://localhost:%d/health", port)
     log.info("  Policy:    GET  http://localhost:%d/policy", port)
-    log.info("  Herald:    %s", config["herald_url"])
+    log.info("  Switchboard:    %s", config["switchboard_url"])
     log.info("  Format:    %s → %s", config["policy_format"], config["policy_path"])
     log.info(
         "  Telemetry: POST /api/v1/telemetry every %ss (%s)",

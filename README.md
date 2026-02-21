@@ -1,10 +1,10 @@
-# Herald
+# Switchboard
 
 Governance protocol for AI agent fleets. Manages the boundary around agents — not the agents themselves.
 
-Any language. Any framework. Any runtime. Herald defines the contract: **policy in, events out, enforcement at the infrastructure level.**
+Any language. Any framework. Any runtime. Switchboard defines the contract: **policy in, events out, enforcement at the infrastructure level.**
 
-## What Herald Does
+## What Switchboard Does
 
 1. **Registers agents** and issues sidecar tokens
 2. **Distributes policy** (tier, allowed actions, rate limits) to agent sidecars
@@ -12,12 +12,14 @@ Any language. Any framework. Any runtime. Herald defines the contract: **policy 
 4. **Collects telemetry** (RTT, jitter, runtime claims) for integrity scoring
 5. **Serves a dashboard** for fleet visibility and governance
 
+![Fleet Dashboard — 4 agents with integrity scores, tiers, and audit log](docs/assets/screenshots/fleet-dashboard.png)
+
 ## Architecture
 
 ```mermaid
 graph TD
     CP["<b>Control Plane</b><br/>Dashboard · Policy Editor · Audit Log"]
-    H["<b>Herald</b><br/>Governance Protocol Endpoint"]
+    H["<b>Switchboard</b><br/>Governance Protocol Endpoint"]
 
     CP -- "REST API" --> H
 
@@ -64,22 +66,22 @@ graph TD
     S4 -- "events + heartbeats" --> H
 ```
 
-Each agent runs with a **sidecar** — a lightweight process that handles all Herald protocol communication. The agent only needs to:
+Each agent runs with a **sidecar** — a lightweight process that handles all Switchboard protocol communication. The agent only needs to:
 
 1. **Read a local policy file** (written by the sidecar)
-2. **POST events to localhost** (forwarded by the sidecar to Herald)
+2. **POST events to localhost** (forwarded by the sidecar to Switchboard)
 
 ## Quick Start
 
 ```bash
 # Clone and install
-git clone https://github.com/watthem/herald.git
-cd herald
+git clone https://github.com/watthem/switchboard.git
+cd switchboard
 python -m venv .venv && source .venv/bin/activate
 pip install -e .
 
-# Start Herald
-uvicorn herald.app:app --port 59237
+# Start Switchboard
+uvicorn switchboard.app:app --port 59237
 
 # In another terminal — register example agents
 python examples/register-fleet.py
@@ -123,7 +125,7 @@ curl -X POST http://localhost:9100/events \
 | Tier | Label | What the Agent Can Do |
 |------|-------|-----------------------|
 | L0 | Observer | Read-only, no network, no writes |
-| L1 | Assistant | Read data via Herald |
+| L1 | Assistant | Read data via Switchboard |
 | L2 | Operator | Read/write within scope, HITL gate on writes |
 | L3 | Autonomous | Full action within policy boundary |
 
@@ -132,8 +134,8 @@ Tiers are enforced at the container and network level — not by prompts.
 ## Project Structure
 
 ```
-herald/
-├── herald/          # Python package
+switchboard/
+├── switchboard/          # Python package
 │   ├── app.py       # FastAPI app (mounts v1 + serves dashboard)
 │   └── v1/          # Governance protocol endpoints
 ├── sidecar/         # Reference sidecar (zero-dep Python)
@@ -144,7 +146,7 @@ herald/
 
 ## Documentation
 
-- [Protocol Specification](docs/PROTOCOL.md) — Herald contract: events, policy, telemetry, API
+- [Protocol Specification](docs/PROTOCOL.md) — Switchboard contract: events, policy, telemetry, API
 - [Architecture](docs/ARCHITECTURE.md) — System design and threat model
 - [Sensor Integration](docs/sensor-integration.md) — Adding hardware-level integrity signals
 - [Design System](docs/DESIGN.md) — UI tokens and component catalog

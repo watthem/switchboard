@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Register example agents with Herald v1.
+"""Register example agents with Switchboard v1.
 
 Demonstrates fleet registration. Adapt FLEET list for your agents.
 
 Usage:
-    HERALD_API_KEY=your-key python examples/register-fleet.py
+    SWITCHBOARD_API_KEY=your-key python examples/register-fleet.py
 """
 
 import json
@@ -14,8 +14,8 @@ from pathlib import Path
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
-HERALD_URL = os.getenv("HERALD_URL", "http://localhost:59237")
-ADMIN_KEY = os.getenv("HERALD_API_KEY", "")
+SWITCHBOARD_URL = os.getenv("SWITCHBOARD_URL", "http://localhost:59237")
+ADMIN_KEY = os.getenv("SWITCHBOARD_API_KEY", "")
 
 # Example agents — replace with your fleet
 FLEET = [
@@ -58,11 +58,11 @@ def register(agent: dict) -> str | None:
     """Register an agent, return token."""
     headers = {"Content-Type": "application/json"}
     if ADMIN_KEY:
-        headers["X-Herald-Key"] = ADMIN_KEY
+        headers["X-Switchboard-Key"] = ADMIN_KEY
 
     data = json.dumps(agent).encode()
     req = Request(
-        f"{HERALD_URL}/api/v1/agents",
+        f"{SWITCHBOARD_URL}/api/v1/agents",
         data=data, headers=headers, method="POST",
     )
 
@@ -81,7 +81,7 @@ def register(agent: dict) -> str | None:
 
 
 def main():
-    print(f"Registering example fleet with Herald at {HERALD_URL}\n")
+    print(f"Registering example fleet with Switchboard at {SWITCHBOARD_URL}\n")
 
     tokens = {}
     for agent in FLEET:
@@ -100,12 +100,12 @@ def main():
     print("Environment variables for each agent's sidecar:\n")
     for agent_id, token in tokens.items():
         print(f"  {agent_id}:")
-        print(f"    HERALD_AGENT_ID={agent_id}")
-        print(f"    HERALD_SIDECAR_TOKEN={token}")
+        print(f"    SWITCHBOARD_AGENT_ID={agent_id}")
+        print(f"    SWITCHBOARD_SIDECAR_TOKEN={token}")
         print()
 
-    print(f"Verify: curl {HERALD_URL}/api/v1/fleet/status | python3 -m json.tool")
-    print(f"Dashboard: {HERALD_URL}/dashboard")
+    print(f"Verify: curl {SWITCHBOARD_URL}/api/v1/fleet/status | python3 -m json.tool")
+    print(f"Dashboard: {SWITCHBOARD_URL}/dashboard")
 
 
 if __name__ == "__main__":

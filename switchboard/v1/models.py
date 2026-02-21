@@ -1,4 +1,4 @@
-"""Pydantic models for Herald v1 governance protocol."""
+"""Pydantic models for Switchboard v1 governance protocol."""
 
 from __future__ import annotations
 
@@ -95,7 +95,7 @@ class AgentPolicy(BaseModel):
 
 
 class AgentRegistration(BaseModel):
-    """Request to register a new agent with Herald."""
+    """Request to register a new agent with Switchboard."""
 
     agent_id: str
     display_name: str | None = None

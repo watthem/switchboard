@@ -1,14 +1,14 @@
 # Contributor Guide
 
-Herald is MIT-licensed and accepts contributions. This guide covers the development workflow and standards.
+Switchboard is MIT-licensed and accepts contributions. This guide covers the development workflow and standards.
 
 ---
 
 ## Getting Started
 
 ```bash
-git clone https://github.com/watthem/herald.git
-cd herald
+git clone https://github.com/watthem/switchboard.git
+cd switchboard
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 ```
@@ -18,7 +18,7 @@ pip install -e ".[dev]"
 1. Create a branch from `main`
 2. Make your changes
 3. Run tests: `pytest tests/ -v --tb=short`
-4. Run lint: `ruff check herald/ tests/`
+4. Run lint: `ruff check switchboard/ tests/`
 5. Run test quality guard: `python3 scripts/check_test_quality.py`
 6. Open a pull request against `main`
 
@@ -51,10 +51,10 @@ pip install -e ".[dev]"
 
 | Change | Location |
 |--------|----------|
-| Protocol endpoints | `herald/v1/routes.py` and `herald/v1/services.py` |
-| Data models | `herald/v1/models.py` |
+| Protocol endpoints | `switchboard/v1/routes.py` and `switchboard/v1/services.py` |
+| Data models | `switchboard/v1/models.py` |
 | Dashboard | `dashboard/index.html` |
-| Sidecar | `sidecar/herald-sidecar.py` |
+| Sidecar | `sidecar/switchboard-sidecar.py` |
 | Documentation | `docs/` (MkDocs, published to GitHub Pages) |
 | Tests | `tests/` |
 

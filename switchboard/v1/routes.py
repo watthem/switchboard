@@ -1,4 +1,4 @@
-"""Herald v1 API routes — governance protocol endpoints.
+"""Switchboard v1 API routes — governance protocol endpoints.
 
 Mount on the main FastAPI app as a sub-router under /api/v1.
 """
@@ -21,19 +21,19 @@ from .models import (
 )
 from . import services
 
-logger = logging.getLogger("herald.v1.routes")
+logger = logging.getLogger("switchboard.v1.routes")
 
 router = APIRouter(prefix="/api/v1", tags=["v1"])
 
 # --- Auth ---
 
-_admin_key_header = APIKeyHeader(name="X-Herald-Key", auto_error=False)
+_admin_key_header = APIKeyHeader(name="X-Switchboard-Key", auto_error=False)
 _bearer = HTTPBearer(auto_error=False)
 
 
 async def _require_admin(api_key: str | None = Depends(_admin_key_header)) -> str:
-    """Admin auth — uses the same X-Herald-Key as legacy endpoints."""
-    expected = os.getenv("HERALD_API_KEY", "").strip()
+    """Admin auth — uses the same X-Switchboard-Key as legacy endpoints."""
+    expected = os.getenv("SWITCHBOARD_API_KEY", "").strip()
     if not expected:
         return ""  # dev mode
     if not api_key or api_key != expected:

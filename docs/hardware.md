@@ -1,6 +1,6 @@
 # Hardware Recommendations
 
-Herald is designed to run on modest local hardware. This page covers resource requirements and deployment considerations.
+Switchboard is designed to run on modest local hardware. This page covers resource requirements and deployment considerations.
 
 ---
 
@@ -9,7 +9,7 @@ Herald is designed to run on modest local hardware. This page covers resource re
 
 ## Minimum Requirements
 
-Herald and its fleet of sidecars run comfortably on:
+Switchboard and its fleet of sidecars run comfortably on:
 
 | Component | Minimum | Recommended |
 |-----------|---------|-------------|
@@ -37,4 +37,4 @@ Each sidecar is a single Python process using only the standard library:
 
 ## Integrity Signal Quality
 
-For meaningful RTT-based integrity scoring, Herald should run on the same physical host as the agents. Network latency between Herald and sidecars is the primary integrity signal — running Herald on a remote server defeats this measurement.
+For meaningful RTT-based integrity scoring, Switchboard should run on the same physical host as the agents. Network latency between Switchboard and sidecars is the primary integrity signal — running Switchboard on a remote server defeats this measurement.

@@ -1,12 +1,12 @@
 """Unit tests for _assess_integrity: all penalty paths and edge cases."""
 
-from herald.v1.models import (
+from switchboard.v1.models import (
     AgentPolicy,
     AgentTelemetry,
     IntegrityPolicy,
     IntegrityStatus,
 )
-from herald.v1.services import _assess_integrity
+from switchboard.v1.services import _assess_integrity
 
 
 def _policy(**kwargs) -> AgentPolicy:

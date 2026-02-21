@@ -1,4 +1,4 @@
-"""Minimal Herald application.
+"""Minimal Switchboard application.
 
 Mounts the v1 governance router and serves the dashboard.
 """
@@ -8,7 +8,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.responses import FileResponse, HTMLResponse
 
-from herald.v1.routes import router as v1_router
+from switchboard.v1.routes import router as v1_router
 
 _ROOT = Path(__file__).resolve().parent.parent
 _DASHBOARD = _ROOT / "dashboard" / "index.html"
@@ -16,7 +16,7 @@ _SHARED_CSS = _ROOT / "docs" / "shared.css"
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(title="Herald", version="2026.2.19-POC")
+    app = FastAPI(title="Switchboard", version="2026.2.19-POC")
     app.include_router(v1_router)
 
     @app.get("/health")

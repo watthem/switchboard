@@ -12,7 +12,7 @@ def test_register_agent(client, admin_headers):
     assert data["ok"] is True
     assert data["existing"] is False
     assert data["agent_id"] == "a1"
-    assert data["token"].startswith("hld_sk_")
+    assert data["token"].startswith("swb_sk_")
 
 
 def test_register_duplicate_returns_existing(client, admin_headers):

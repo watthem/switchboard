@@ -11,7 +11,7 @@ def test_dashboard_returns_html(client):
     resp = client.get("/dashboard")
     assert resp.status_code == 200
     assert "text/html" in resp.headers["content-type"]
-    assert "herald" in resp.text.lower()
+    assert "switchboard" in resp.text.lower()
 
 
 def test_shared_css_returns_css(client):

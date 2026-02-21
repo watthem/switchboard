@@ -6,7 +6,7 @@ dist/
 build/
 .venv/
 
-# Herald data (POC file-backed storage)
+# Switchboard data (POC file-backed storage)
 data/
 
 # Environment
@@ -26,5 +26,8 @@ Thumbs.db
 # MkDocs
 site/
 
+# Node
+node_modules/
+
 # Agent tokens
-.herald-token
+.switchboard-token

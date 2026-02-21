@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Herald — Fleet Control Plane</title>
+  <title>Switchboard — Fleet Control Plane</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/docs/shared.css">
@@ -295,7 +295,7 @@
   <!-- Navigation -->
   <nav class="nav" aria-label="Main navigation">
     <div class="nav__inner">
-      <a href="/dashboard" class="nav__brand">herald <span>/ fleet</span></a>
+      <a href="/dashboard" class="nav__brand">switchboard <span>/ fleet</span></a>
       <a href="/dashboard" class="active">Dashboard</a>
       <a href="/audit-log">Audit Log</a>
       <a href="/charter">Charter</a>
@@ -364,7 +364,7 @@
     // ═══════════════════════════════════════════
     // CONFIG & STATE
     // ═══════════════════════════════════════════
-    const HERALD_URL = window.location.origin;
+    const SWITCHBOARD_URL = window.location.origin;
     const state = {
       selectedAgentId: null,
       refreshTimer: null,
@@ -449,7 +449,7 @@
     }
 
     async function fetchJSON(path, opts = {}) {
-      const r = await fetch(HERALD_URL + path, opts);
+      const r = await fetch(SWITCHBOARD_URL + path, opts);
       if (!r.ok) {
         const t = await r.text();
         throw new Error(r.status + ' ' + r.statusText + (t ? ' - ' + t.slice(0, 120) : ''));
@@ -509,7 +509,7 @@
         document.getElementById('last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
         document.getElementById('nav-agent-count').textContent = (health.total || 0) + ' agents';
       } catch (err) {
-        showError('Cannot reach Herald at ' + HERALD_URL + ' \u2014 ' + err.message);
+        showError('Cannot reach Switchboard at ' + SWITCHBOARD_URL + ' \u2014 ' + err.message);
       }
     }
 
@@ -663,7 +663,7 @@
 
             <!-- Admin key -->
             <div class="admin-key-row">
-              <label for="admin-key-input">Herald API Key</label>
+              <label for="admin-key-input">Switchboard API Key</label>
               <input id="admin-key-input" type="password" placeholder="Required for tier changes" value="${esc(state.adminKey)}">
             </div>
 
@@ -849,7 +849,7 @@
     // ═══════════════════════════════════════════
     async function changeTier(agentId, newTier) {
       if (!state.adminKey) {
-        showToast('Enter Herald API Key to change tier');
+        showToast('Enter Switchboard API Key to change tier');
         return;
       }
 
@@ -858,7 +858,7 @@
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'X-Herald-Key': state.adminKey,
+            'X-Switchboard-Key': state.adminKey,
           },
           body: JSON.stringify({ tier: newTier }),
         });
@@ -887,7 +887,7 @@
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-Herald-Key': state.adminKey,
+            'X-Switchboard-Key': state.adminKey,
           },
           body: JSON.stringify({ preset }),
         });

@@ -2,13 +2,13 @@
 
 
 def test_admin_endpoint_requires_key(client, admin_key):
-    """Admin endpoints return 401 without key when HERALD_API_KEY is set."""
+    """Admin endpoints return 401 without key when SWITCHBOARD_API_KEY is set."""
     resp = client.get("/api/v1/agents")
     assert resp.status_code == 401
 
 
 def test_admin_endpoint_wrong_key(client, admin_key):
-    resp = client.get("/api/v1/agents", headers={"X-Herald-Key": "wrong"})
+    resp = client.get("/api/v1/agents", headers={"X-Switchboard-Key": "wrong"})
     assert resp.status_code == 401
 
 
@@ -18,8 +18,8 @@ def test_admin_endpoint_correct_key(client, admin_headers):
 
 
 def test_dev_mode_no_key_required(client, monkeypatch):
-    """When HERALD_API_KEY is unset, admin endpoints work without auth."""
-    monkeypatch.delenv("HERALD_API_KEY", raising=False)
+    """When SWITCHBOARD_API_KEY is unset, admin endpoints work without auth."""
+    monkeypatch.delenv("SWITCHBOARD_API_KEY", raising=False)
     resp = client.get("/api/v1/agents")
     assert resp.status_code == 200
 

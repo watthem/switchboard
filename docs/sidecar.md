@@ -1,6 +1,6 @@
 # The Sidecar Pattern
 
-The sidecar is the bridge between your agent and Herald. It handles all protocol communication so your agent doesn't have to.
+The sidecar is the bridge between your agent and Switchboard. It handles all protocol communication so your agent doesn't have to.
 
 ---
 
@@ -11,7 +11,7 @@ The sidecar is the bridge between your agent and Herald. It handles all protocol
 │   Your Agent Container    │
 │                          │
 │  ┌──────┐  ┌──────────┐ │
-│  │Agent │──│ Sidecar   │─┼──── Herald API
+│  │Agent │──│ Sidecar   │─┼──── Switchboard API
 │  │(any) │  │ (Python)  │ │     (port 59237)
 │  └──────┘  └──────────┘ │
 │     ▲           │        │
@@ -22,18 +22,18 @@ The sidecar is the bridge between your agent and Herald. It handles all protocol
 
 The sidecar:
 
-1. **Pulls policy** from Herald and writes it as a local file your agent reads
-2. **Forwards events** from your agent (localhost:9100) to Herald
+1. **Pulls policy** from Switchboard and writes it as a local file your agent reads
+2. **Forwards events** from your agent (localhost:9100) to Switchboard
 3. **Sends heartbeats** every 30 seconds to prove the agent is alive
 4. **Reports telemetry** (network RTT, jitter, runtime claims) for integrity scoring
 
 ## Running the Sidecar
 
 ```bash
-HERALD_URL=http://localhost:59237 \
+SWITCHBOARD_URL=http://localhost:59237 \
 AGENT_ID=my-agent \
-SIDECAR_TOKEN=hld_sk_... \
-python sidecar/herald-sidecar.py
+SIDECAR_TOKEN=swb_sk_... \
+python sidecar/switchboard-sidecar.py
 ```
 
 ## Configuration
@@ -42,12 +42,12 @@ All configuration is via environment variables:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `HERALD_URL` | `http://localhost:59237` | Herald API endpoint |
+| `SWITCHBOARD_URL` | `http://localhost:59237` | Switchboard API endpoint |
 | `AGENT_ID` | *(required)* | Agent identifier |
 | `SIDECAR_TOKEN` | *(required)* | Bearer token from registration |
-| `HERALD_API_KEY` | | Admin key (for auto-registration) |
+| `SWITCHBOARD_API_KEY` | | Admin key (for auto-registration) |
 | `POLICY_FORMAT` | `json` | Policy file format: `json`, `yaml`, `env`, `toml` |
-| `POLICY_PATH` | `/herald/policy.json` | Where to write the policy file |
+| `POLICY_PATH` | `/switchboard/policy.json` | Where to write the policy file |
 | `EVENT_LISTEN_PORT` | `9100` | Port for agent event submissions |
 | `HEARTBEAT_INTERVAL` | `30` | Seconds between heartbeats |
 | `TELEMETRY_INTERVAL` | `30` | Seconds between telemetry reports |
@@ -86,7 +86,7 @@ The sidecar writes policy in whatever format your agent prefers:
 === "Environment"
 
     ```bash
-    HERALD_AGENT_ID=my-agent
+    SWITCHBOARD_AGENT_ID=my-agent
     HERALD_TIER=L2
     HERALD_ALLOWED_ACTIONS=file_read,api_call
     HERALD_DENIED_ACTIONS=delete_records
@@ -94,14 +94,14 @@ The sidecar writes policy in whatever format your agent prefers:
 
 ## Auto-Registration
 
-If you provide `HERALD_API_KEY` instead of `SIDECAR_TOKEN`, the sidecar will register the agent automatically and store the token:
+If you provide `SWITCHBOARD_API_KEY` instead of `SIDECAR_TOKEN`, the sidecar will register the agent automatically and store the token:
 
 ```bash
-HERALD_URL=http://localhost:59237 \
+SWITCHBOARD_URL=http://localhost:59237 \
 AGENT_ID=new-agent \
-HERALD_API_KEY=your-admin-key \
+SWITCHBOARD_API_KEY=your-admin-key \
 AGENT_TIER=L1 \
-python sidecar/herald-sidecar.py
+python sidecar/switchboard-sidecar.py
 ```
 
 ## Zero Dependencies

@@ -1,8 +1,8 @@
-site_name: Herald Protocol
+site_name: Switchboard Protocol
 site_description: Governance protocol for AI agent fleets
-site_url: https://watthem.github.io/herald
-repo_url: https://github.com/watthem/herald
-repo_name: watthem/herald
+site_url: https://watthem.github.io/switchboard
+repo_url: https://github.com/watthem/switchboard
+repo_name: watthem/switchboard
 
 theme:
   name: material
@@ -21,6 +21,7 @@ theme:
 
 markdown_extensions:
   - admonition
+  - md_in_html
   - pymdownx.details
   - pymdownx.superfences:
       custom_fences:
@@ -39,7 +40,7 @@ markdown_extensions:
 
 nav:
   - Overview:
-    - "What is Herald?": index.md
+    - "What is Switchboard?": index.md
     - "The Trust Boundary": trust-boundary.md
     - "Architecture": ARCHITECTURE.md
   - Getting Started:

@@ -1,14 +1,14 @@
-# CLAUDE.md — Herald
+# CLAUDE.md — Switchboard
 
 ## What This Is
 
-Herald is a governance protocol for AI agent fleets. It manages the boundary around agents — not the agents themselves. Runtime-agnostic: any language, any framework.
+Switchboard is a governance protocol for AI agent fleets. It manages the boundary around agents — not the agents themselves. Runtime-agnostic: any language, any framework.
 
 ## Project Structure
 
 ```
-herald/
-├── herald/              # Python package
+switchboard/
+├── switchboard/              # Python package
 │   ├── __init__.py      # Version
 │   ├── app.py           # FastAPI app (~35 lines)
 │   └── v1/              # Governance protocol endpoints
@@ -26,20 +26,20 @@ herald/
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-uvicorn herald.app:app --port 59237 --reload
+uvicorn switchboard.app:app --port 59237 --reload
 ```
 
 ## Key Commands
 
 ```bash
-# Start Herald
-uvicorn herald.app:app --port 59237
+# Start Switchboard
+uvicorn switchboard.app:app --port 59237
 
 # Register example agents
 python examples/register-fleet.py
 
 # Run sidecar for an agent
-HERALD_URL=http://localhost:59237 AGENT_ID=my-agent python sidecar/herald-sidecar.py
+SWITCHBOARD_URL=http://localhost:59237 AGENT_ID=my-agent python sidecar/switchboard-sidecar.py
 
 # Health check
 curl http://localhost:59237/health
@@ -52,7 +52,7 @@ open http://localhost:59237/dashboard
 
 | Port | Service |
 |------|---------|
-| 59237 | Herald API + Dashboard |
+| 59237 | Switchboard API + Dashboard |
 | 9100 | Sidecar event listener (per-agent, localhost only) |
 
 ## Storage
@@ -66,5 +66,5 @@ POC uses file-backed JSON in `data/v1/` (gitignored). Files:
 
 - v1 endpoints have no external deps beyond FastAPI/Pydantic
 - Sidecar is stdlib-only Python 3.11+
-- Dashboard is a single HTML file with inline JS, served by Herald
+- Dashboard is a single HTML file with inline JS, served by Switchboard
 - Design tokens in `docs/shared.css` (dark theme, WCAG AA)

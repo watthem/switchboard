@@ -1,16 +1,16 @@
 # Sensor Integration Guide
 
 **Type:** How-To Guide
-**Audience:** Engineers adding hardware-level integrity signals to a Herald-managed fleet
-**Prerequisites:** Herald running, sidecar deployed alongside agent
+**Audience:** Engineers adding hardware-level integrity signals to a Switchboard-managed fleet
+**Prerequisites:** Switchboard running, sidecar deployed alongside agent
 
 ---
 
 ## Overview
 
-The Herald sidecar collects two kinds of telemetry out of the box:
+The Switchboard sidecar collects two kinds of telemetry out of the box:
 
-1. **Network signals** — RTT and jitter measured by pinging Herald's `/health` endpoint
+1. **Network signals** — RTT and jitter measured by pinging Switchboard's `/health` endpoint
 2. **Runtime claims** — provider, model, and region declared via environment variables
 
 These are sufficient for most deployments. But for higher-assurance scenarios (strict integrity preset, compliance environments, trading floors), you can add a **local sensor agent** that measures hardware-level timing signals the sidecar can't reach on its own:
@@ -41,7 +41,7 @@ These signals are physics-based: the speed of light through fiber adds ~5 micros
                                                   │
                                                   ▼
                                            ┌──────────────┐
-                                           │   Herald     │
+                                           │   Switchboard     │
                                            │  (FastAPI)   │
                                            └──────────────┘
 ```
@@ -56,7 +56,7 @@ The sensor agent runs on the same host as the sidecar. It measures timing signal
 If your sensor agent writes readings to a shared file or you have baseline measurements, set the values directly on the sidecar:
 
 ```bash
-HERALD_URL=http://localhost:59237 \
+SWITCHBOARD_URL=http://localhost:59237 \
 AGENT_ID=warehouse-monitor \
 TELEMETRY_MODE=sidecar_plus_sensor \
 OBSERVED_PROVIDER=anthropic \
@@ -65,10 +65,10 @@ OBSERVED_REGION=us-west-2 \
 SENSOR_HID_RTT_MS=12.4 \
 SENSOR_DWELL_MS=85.2 \
 SENSOR_OS_JITTER_MS=3.1 \
-python herald-sidecar.py
+python switchboard-sidecar.py
 ```
 
-The sidecar includes these values in every telemetry POST to Herald. Herald evaluates them against the agent's integrity policy.
+The sidecar includes these values in every telemetry POST to Switchboard. Switchboard evaluates them against the agent's integrity policy.
 
 **Docker Compose example:**
 
@@ -77,10 +77,10 @@ services:
   my-agent:
     image: my-org/my-agent:latest
     volumes:
-      - policy:/herald:ro
+      - policy:/switchboard:ro
 
   sensor:
-    image: herald/sensor-agent:latest
+    image: switchboard/sensor-agent:latest
     # Writes readings to shared volume
     volumes:
       - sensor-data:/sensor
@@ -88,7 +88,7 @@ services:
   sidecar:
     build: ../sidecar
     environment:
-      HERALD_URL: http://herald:59237
+      SWITCHBOARD_URL: http://switchboard:59237
       AGENT_ID: my-agent
       AGENT_TIER: L2
       TELEMETRY_MODE: sidecar_plus_sensor
@@ -99,7 +99,7 @@ services:
       SENSOR_DWELL_MS: "85.2"
       SENSOR_OS_JITTER_MS: "3.1"
     volumes:
-      - policy:/herald
+      - policy:/switchboard
 
 volumes:
   policy:
@@ -142,14 +142,14 @@ Values outside valid ranges are included but may trigger integrity warnings.
 
 ## Telemetry Mode
 
-Set `TELEMETRY_MODE` to tell Herald what kind of signals to expect:
+Set `TELEMETRY_MODE` to tell Switchboard what kind of signals to expect:
 
 | Mode | Description | When to Use |
 |------|-------------|-------------|
 | `sidecar_only` | Network RTT/jitter + runtime claims only | Default. No sensor agent deployed. |
 | `sidecar_plus_sensor` | All sidecar signals plus HID/dwell/OS jitter | Sensor agent is running alongside sidecar. |
 
-Herald uses this to set appropriate baselines. A `sidecar_plus_sensor` agent with missing sensor signals will show as `elevated` rather than `unknown`.
+Switchboard uses this to set appropriate baselines. A `sidecar_plus_sensor` agent with missing sensor signals will show as `elevated` rather than `unknown`.
 
 ## Integrity Policy Presets
 
@@ -167,13 +167,13 @@ Apply presets via the dashboard or API:
 # Apply strict preset to one agent
 curl -X POST http://localhost:59237/api/v1/agents/warehouse-monitor/policy/preset \
   -H "Content-Type: application/json" \
-  -H "X-Herald-Key: $HERALD_API_KEY" \
+  -H "X-Switchboard-Key: $SWITCHBOARD_API_KEY" \
   -d '{"preset": "strict", "pin_observed_claims": true}'
 
 # Apply standard preset to all agents
 curl -X POST http://localhost:59237/api/v1/fleet/policy/preset \
   -H "Content-Type: application/json" \
-  -H "X-Herald-Key: $HERALD_API_KEY" \
+  -H "X-Switchboard-Key: $SWITCHBOARD_API_KEY" \
   -d '{"preset": "standard", "pin_observed_claims": false}'
 ```
 

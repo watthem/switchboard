@@ -3,7 +3,7 @@
 ## 2026.02.19-POC — Initial Release
 
 ### Added
-- Herald v1 governance API (FastAPI)
+- Switchboard v1 governance API (FastAPI)
 - Agent registration, policy management, event ingestion, telemetry
 - Integrity scoring (100-point system with policy-aware penalty checks)
 - Policy presets (standard, strict, relaxed) with fleet-wide application

@@ -1,4 +1,4 @@
-# Herald Onboarding: Ruby Agent
+# Switchboard Onboarding: Ruby Agent
 
 Get fleet visibility and audit trails for your Ruby agent in 5 minutes. No SDK, no framework, no rewrite.
 
@@ -11,8 +11,8 @@ Get fleet visibility and audit trails for your Ruby agent in 5 minutes. No SDK, 
 
 ```bash
 # Clone and navigate
-git clone <herald-repo-url>
-cd herald/examples/ruby-agent
+git clone <switchboard-repo-url>
+cd switchboard/examples/ruby-agent
 
 # Start everything
 docker compose up --build
@@ -20,15 +20,15 @@ docker compose up --build
 
 You'll see three services start:
 
-1. **Herald** — the governance protocol endpoint (port 59237)
+1. **Switchboard** — the governance protocol endpoint (port 59237)
 2. **Sidecar** — registers your agent, syncs policy, forwards events
 3. **Ruby agent** — the example agent (replace with yours)
 
 Within seconds:
 
 ```
-sidecar   | 12:00:01 [sidecar] Registered agent 'ruby-demo-agent' — token: hld_sk_...
-sidecar   | 12:00:01 [sidecar] Policy written to /herald/policy.json (json)
+sidecar   | 12:00:01 [sidecar] Registered agent 'ruby-demo-agent' — token: swb_sk_...
+sidecar   | 12:00:01 [sidecar] Policy written to /switchboard/policy.json (json)
 sidecar   | 12:00:01 [sidecar] Sidecar ready for agent 'ruby-demo-agent'
 ruby-agent| [agent] Policy loaded: tier=L1, actions=read_data, query_api, send_notification
 ruby-agent| [agent] Event reported: read_data → inventory.products (200)
@@ -66,10 +66,10 @@ Replace the example Ruby agent with your own. Your agent only needs to do two th
 
 ### 1. Read policy
 
-The sidecar writes a policy file to `/herald/policy.json` (mounted read-only into your container). Read it however you want:
+The sidecar writes a policy file to `/switchboard/policy.json` (mounted read-only into your container). Read it however you want:
 
 ```ruby
-policy = JSON.parse(File.read('/herald/policy.json'))
+policy = JSON.parse(File.read('/switchboard/policy.json'))
 tier = policy['tier']              # "L0", "L1", "L2", "L3"
 allowed = policy['allowed_actions'] # ["read_data", "query_api", ...]
 ```
@@ -103,11 +103,11 @@ Replace the `ruby-agent` service with your image:
 
 ```yaml
 services:
-  # Keep herald and sidecar as-is, just change this:
+  # Keep switchboard and sidecar as-is, just change this:
   my-agent:
     image: my-org/my-agent:latest
     volumes:
-      - policy:/herald:ro
+      - policy:/switchboard:ro
     depends_on:
       - sidecar
     environment:
@@ -130,7 +130,7 @@ Without changing a line of your agent's existing code (beyond adding the 3-line 
 │         docker compose               │
 │                                      │
 │  ┌─────────┐   ┌─────────────────┐  │
-│  │  Herald  │◄──│    Sidecar      │  │
+│  │  Switchboard  │◄──│    Sidecar      │  │
 │  │  :59237   │   │  (registers,    │  │
 │  │          │   │   heartbeats,   │  │
 │  │  Policy  │──►│   policy sync)  │  │

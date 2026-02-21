@@ -1,4 +1,4 @@
-# DESIGN.md — Herald Design System
+# DESIGN.md — Switchboard Design System
 
 > **Diataxis category:** Reference
 > **Source:** `docs/shared.css`
@@ -68,7 +68,7 @@ Sticky top navigation with brand, links, and status indicator.
 ```html
 <nav class="nav">
   <div class="nav__inner">
-    <a href="/dashboard" class="nav__brand">herald <span>/ fleet</span></a>
+    <a href="/dashboard" class="nav__brand">switchboard <span>/ fleet</span></a>
     <a href="/dashboard" class="active">Dashboard</a>
     <div class="nav__status">
       <div class="nav__dot"></div>

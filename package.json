@@ -1,0 +1,11 @@
+{
+  "private": true,
+  "scripts": {
+    "screenshots:install": "npx playwright install chromium",
+    "screenshots": "npx playwright test e2e/screenshots.spec.ts",
+    "screenshots:seed": "python3 scripts/seed-demo-data.py"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.0"
+  }
+}

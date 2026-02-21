@@ -1,16 +1,16 @@
-# Herald
+# Switchboard
 
 <figure markdown="span">
-  ![Herald — Governance protocol for AI agent fleets](assets/hero.png){ width="600" }
+  ![Switchboard — Governance protocol for AI agent fleets](assets/hero.png){ width="600" }
 </figure>
 
 **Governance protocol for AI agent fleets.** Manages the boundary around agents — not the agents themselves.
 
-Any language. Any framework. Any runtime. Herald defines the contract: **policy in, events out, enforcement at the infrastructure level.**
+Any language. Any framework. Any runtime. Switchboard defines the contract: **policy in, events out, enforcement at the infrastructure level.**
 
 ---
 
-## What Herald Does
+## What Switchboard Does
 
 1. **Registers agents** and issues sidecar tokens
 2. **Distributes policy** (tier, allowed actions, rate limits) to agent sidecars
@@ -18,12 +18,14 @@ Any language. Any framework. Any runtime. Herald defines the contract: **policy 
 4. **Collects telemetry** (RTT, jitter, runtime claims) for integrity scoring
 5. **Serves a dashboard** for fleet visibility and governance
 
+![Fleet Dashboard — 4 agents with integrity scores, tiers, and audit log](assets/screenshots/fleet-dashboard.png)
+
 ## Architecture
 
 ```mermaid
 graph TD
     CP["<b>Control Plane</b><br/>Dashboard · Policy Editor · Audit Log"]
-    H["<b>Herald</b><br/>Governance Protocol Endpoint"]
+    H["<b>Switchboard</b><br/>Governance Protocol Endpoint"]
 
     CP -- "REST API" --> H
 
@@ -70,19 +72,19 @@ graph TD
     S4 -- "events + heartbeats" --> H
 ```
 
-Each agent runs with a **sidecar** — a lightweight process that handles all Herald protocol communication. The agent only needs to:
+Each agent runs with a **sidecar** — a lightweight process that handles all Switchboard protocol communication. The agent only needs to:
 
 1. **Read a local policy file** (written by the sidecar)
-2. **POST events to localhost** (forwarded by the sidecar to Herald)
+2. **POST events to localhost** (forwarded by the sidecar to Switchboard)
 
 ## Quick Start
 
 ```bash
-git clone https://github.com/watthem/herald.git
-cd herald
+git clone https://github.com/watthem/switchboard.git
+cd switchboard
 python -m venv .venv && source .venv/bin/activate
 pip install -e .
-uvicorn herald.app:app --port 59237
+uvicorn switchboard.app:app --port 59237
 ```
 
 Then open [http://localhost:59237/dashboard](http://localhost:59237/dashboard).

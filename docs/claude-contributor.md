@@ -1,18 +1,18 @@
 # AI Agent Rules (CLAUDE.md)
 
-Rules for AI coding agents contributing to Herald. If you use Claude Code, Cursor, Copilot, or any AI assistant to write code for this repo, these are the guardrails.
+Rules for AI coding agents contributing to Switchboard. If you use Claude Code, Cursor, Copilot, or any AI assistant to write code for this repo, these are the guardrails.
 
 ---
 
-## What Herald Is
+## What Switchboard Is
 
-Herald is a governance protocol for AI agent fleets. It manages the boundary around agents — not the agents themselves. Runtime-agnostic: any language, any framework.
+Switchboard is a governance protocol for AI agent fleets. It manages the boundary around agents — not the agents themselves. Runtime-agnostic: any language, any framework.
 
 ## Project Structure
 
 ```
-herald/
-├── herald/              # Python package
+switchboard/
+├── switchboard/              # Python package
 │   ├── app.py           # FastAPI app (~35 lines)
 │   └── v1/              # Governance protocol endpoints
 │       ├── models.py    # Pydantic models
@@ -30,11 +30,11 @@ herald/
 ```bash
 # Development
 pip install -e ".[dev]"
-uvicorn herald.app:app --port 59237 --reload
+uvicorn switchboard.app:app --port 59237 --reload
 
 # Testing
 pytest tests/ -v --tb=short
-ruff check herald/ tests/
+ruff check switchboard/ tests/
 python3 scripts/check_test_quality.py
 
 # Documentation
@@ -57,14 +57,14 @@ mkdocs build  # build static site
 - Don't add new dependencies without discussing in the PR
 - Don't modify `docs/shared.css` without understanding the design system
 - Don't skip the test quality guard — it runs in CI
-- Don't add framework abstractions — Herald is intentionally simple
+- Don't add framework abstractions — Switchboard is intentionally simple
 - Don't "improve" code you weren't asked to change
 
 ## Port Map
 
 | Port | Service |
 |------|---------|
-| 59237 | Herald API + Dashboard |
+| 59237 | Switchboard API + Dashboard |
 | 9100 | Sidecar event listener (per-agent, localhost only) |
 
 ## Storage

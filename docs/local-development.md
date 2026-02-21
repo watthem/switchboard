@@ -1,14 +1,14 @@
 # Local Development
 
-Set up Herald for development with hot reload, testing, and linting.
+Set up Switchboard for development with hot reload, testing, and linting.
 
 ---
 
 ## Setup
 
 ```bash
-git clone https://github.com/watthem/herald.git
-cd herald
+git clone https://github.com/watthem/switchboard.git
+cd switchboard
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 ```
@@ -16,7 +16,7 @@ pip install -e ".[dev]"
 ## Run with Hot Reload
 
 ```bash
-uvicorn herald.app:app --port 59237 --reload
+uvicorn switchboard.app:app --port 59237 --reload
 ```
 
 ## Run Tests
@@ -30,7 +30,7 @@ All tests use isolated temp directories for storage — no cleanup needed.
 ## Lint
 
 ```bash
-ruff check herald/ tests/
+ruff check switchboard/ tests/
 ```
 
 ## Test Quality Guard
@@ -46,8 +46,8 @@ Fails on tautological asserts, zero-assert tests, and excessive status-code-only
 ## Project Structure
 
 ```
-herald/
-├── herald/              # Python package
+switchboard/
+├── switchboard/              # Python package
 │   ├── app.py           # FastAPI app (~35 lines)
 │   └── v1/              # Governance protocol endpoints
 │       ├── models.py    # Pydantic models
@@ -74,11 +74,11 @@ POC uses file-backed JSON in `data/v1/` (gitignored):
 
 | Port | Service |
 |------|---------|
-| 59237 | Herald API + Dashboard |
+| 59237 | Switchboard API + Dashboard |
 | 9100 | Sidecar event listener (per-agent, localhost only) |
 
 ## Environment Variables
 
 | Variable | Purpose | Required |
 |----------|---------|----------|
-| `HERALD_API_KEY` | Admin API key. Unset = dev mode (no auth). | No |
+| `SWITCHBOARD_API_KEY` | Admin API key. Unset = dev mode (no auth). | No |

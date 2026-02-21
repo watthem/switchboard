@@ -1,12 +1,12 @@
 # Connecting Your First Agent
 
-Integrate any agent with Herald in three steps: register, run the sidecar, emit events.
+Integrate any agent with Switchboard in three steps: register, run the sidecar, emit events.
 
 ---
 
 ## Overview
 
-Herald doesn't care what language your agent uses or how it's built. The integration contract is:
+Switchboard doesn't care what language your agent uses or how it's built. The integration contract is:
 
 1. Your agent **reads a local policy file** (written by the sidecar)
 2. Your agent **POSTs events to localhost:9100** (forwarded by the sidecar)
@@ -18,7 +18,7 @@ That's it. No SDK, no schema conformance, no framework adoption.
 ```bash
 curl -X POST http://localhost:59237/api/v1/agents \
   -H "Content-Type: application/json" \
-  -H "X-Herald-Key: $HERALD_API_KEY" \
+  -H "X-Switchboard-Key: $SWITCHBOARD_API_KEY" \
   -d '{
     "agent_id": "my-agent",
     "display_name": "My First Agent",
@@ -33,15 +33,15 @@ Save the `token` from the response — the sidecar needs it.
 ## Step 2: Run the Sidecar
 
 ```bash
-HERALD_URL=http://localhost:59237 \
+SWITCHBOARD_URL=http://localhost:59237 \
 AGENT_ID=my-agent \
-SIDECAR_TOKEN=hld_sk_... \
-python sidecar/herald-sidecar.py
+SIDECAR_TOKEN=swb_sk_... \
+python sidecar/switchboard-sidecar.py
 ```
 
 The sidecar will:
 
-- Pull policy from Herald and write `policy.json` locally
+- Pull policy from Switchboard and write `policy.json` locally
 - Start heartbeat and telemetry loops
 - Listen on `http://localhost:9100` for your agent's events
 
@@ -102,9 +102,9 @@ The sidecar writes your agent's policy to a local file. Your agent can read it t
 import json
 from pathlib import Path
 
-policy = json.loads(Path("/herald/policy.json").read_text())
+policy = json.loads(Path("/switchboard/policy.json").read_text())
 if "delete_records" in policy.get("denied_actions", []):
-    raise PermissionError("Herald policy denies delete_records")
+    raise PermissionError("Switchboard policy denies delete_records")
 ```
 
 ## Verify

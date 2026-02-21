@@ -1,18 +1,18 @@
 # API Reference
 
-Herald v1 governance protocol endpoints. All routes are prefixed with `/api/v1`.
+Switchboard v1 governance protocol endpoints. All routes are prefixed with `/api/v1`.
 
 ---
 
 ## Authentication
 
-### Admin Key (`X-Herald-Key` header)
+### Admin Key (`X-Switchboard-Key` header)
 
-Required for agent management, policy updates, and telemetry queries. Set via `HERALD_API_KEY` environment variable. When unset, Herald runs in **dev mode** (no auth required).
+Required for agent management, policy updates, and telemetry queries. Set via `SWITCHBOARD_API_KEY` environment variable. When unset, Switchboard runs in **dev mode** (no auth required).
 
 ### Sidecar Token (`Authorization: Bearer` header)
 
-Required for event ingestion, telemetry reporting, and policy fetching. Tokens are issued during agent registration and start with `hld_sk_`.
+Required for event ingestion, telemetry reporting, and policy fetching. Tokens are issued during agent registration and start with `swb_sk_`.
 
 ---
 
@@ -46,7 +46,7 @@ POST /api/v1/agents
   "ok": true,
   "existing": false,
   "agent_id": "my-agent",
-  "token": "hld_sk_...",
+  "token": "swb_sk_...",
   "policy": { ... }
 }
 ```

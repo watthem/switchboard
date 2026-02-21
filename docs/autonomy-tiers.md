@@ -1,6 +1,6 @@
 # Autonomy Tiers (L0-L3)
 
-Herald governs agent capabilities through four autonomy tiers, enforced at the infrastructure level.
+Switchboard governs agent capabilities through four autonomy tiers, enforced at the infrastructure level.
 
 ---
 
@@ -9,7 +9,7 @@ Herald governs agent capabilities through four autonomy tiers, enforced at the i
 | Tier | Label | What the Agent Can Do | Enforcement |
 |------|-------|-----------------------|-------------|
 | **L0** | Observer | Read-only, no network, no writes | Container has no write mounts or network access |
-| **L1** | Assistant | Read data via Herald | Herald enforces read-only routing |
+| **L1** | Assistant | Read data via Switchboard | Switchboard enforces read-only routing |
 | **L2** | Operator | Read/write within scope | Human-in-the-loop gate on write actions |
 | **L3** | Autonomous | Full action within policy boundary | Policy-bounded, audit-logged |
 
@@ -22,7 +22,7 @@ Tiers are enforced at the **container and network level** — not by prompts. An
 The most restrictive tier. The agent can observe but cannot act.
 
 - **Filesystem:** Read-only mounts only
-- **Network:** No outbound access (except Herald via sidecar)
+- **Network:** No outbound access (except Switchboard via sidecar)
 - **Use cases:** Monitoring, log analysis, read-only dashboards
 - **Risk ceiling:** Zero. Even a fully compromised L0 agent cannot cause damage.
 
@@ -31,7 +31,7 @@ The most restrictive tier. The agent can observe but cannot act.
 The agent can read data and respond to queries, but cannot modify state.
 
 - **Filesystem:** Read-only mounts
-- **Network:** Herald API only (via sidecar)
+- **Network:** Switchboard API only (via sidecar)
 - **Use cases:** Q&A bots, research assistants, data lookups
 - **Risk ceiling:** Information disclosure only. No state changes possible.
 
@@ -51,7 +51,7 @@ Full action authority within the policy boundary. No human gate on individual ac
 
 - **Filesystem:** Full access within policy scope
 - **Network:** All allowed endpoints
-- **Audit:** Every action logged to Herald
+- **Audit:** Every action logged to Switchboard
 - **Use cases:** CI/CD automation, autonomous ops, scheduled tasks
 - **Risk ceiling:** Bounded by policy. Every action is auditable. Revocable at any time.
 
@@ -62,7 +62,7 @@ Full action authority within the policy boundary. No human gate on individual ac
 ```bash
 curl -X PUT http://localhost:59237/api/v1/agents/my-agent/policy \
   -H "Content-Type: application/json" \
-  -H "X-Herald-Key: $HERALD_API_KEY" \
+  -H "X-Switchboard-Key: $SWITCHBOARD_API_KEY" \
   -d '{"tier": "L2"}'
 ```
 
@@ -71,7 +71,7 @@ curl -X PUT http://localhost:59237/api/v1/agents/my-agent/policy \
 ```bash
 curl -X POST http://localhost:59237/api/v1/agents \
   -H "Content-Type: application/json" \
-  -H "X-Herald-Key: $HERALD_API_KEY" \
+  -H "X-Switchboard-Key: $SWITCHBOARD_API_KEY" \
   -d '{"agent_id": "my-agent", "tier": "L1"}'
 ```
 

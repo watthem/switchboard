@@ -1,26 +1,26 @@
 """Tests for file-backed JSON storage: persistence, trimming, corrupt recovery."""
 
-from herald.v1.models import AgentEvent, AgentStore, AgentTelemetry, EventStore, TelemetryStore
-from herald.v1 import services
+from switchboard.v1.models import AgentEvent, AgentStore, AgentTelemetry, EventStore, TelemetryStore
+from switchboard.v1 import services
 
 
 def test_agents_persist_across_load_save(tmp_path):
     """Data survives a save/load cycle."""
-    from herald.v1.models import AgentPolicy, AgentRecord
+    from switchboard.v1.models import AgentPolicy, AgentRecord
 
     store = AgentStore()
     store.agents["a1"] = AgentRecord(
         agent_id="a1",
         display_name="Agent One",
         policy=AgentPolicy(agent_id="a1"),
-        token="hld_sk_test",
+        token="swb_sk_test",
     )
     services._save_agents(store)
 
     loaded = services._load_agents()
     assert "a1" in loaded.agents
     assert loaded.agents["a1"].display_name == "Agent One"
-    assert loaded.agents["a1"].token == "hld_sk_test"
+    assert loaded.agents["a1"].token == "swb_sk_test"
 
 
 def test_events_persist_across_load_save():

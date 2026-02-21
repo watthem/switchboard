@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# claude-code-hook.sh — Report Claude Code tool events to Herald
+# claude-code-hook.sh — Report Claude Code tool events to Switchboard
 #
 # Configure as a Claude Code hook in .claude/settings.local.json:
 #   {
@@ -11,18 +11,18 @@
 #   }
 #
 # Environment variables:
-#   HERALD_URL      — Herald endpoint (default: http://localhost:59237)
-#   HERALD_AGENT_ID — Agent identifier (default: claude-code)
-#   HERALD_CC_TOKEN — Bearer token (or reads from HERALD_TOKEN_FILE)
-#   HERALD_TOKEN_FILE — Path to token file (default: .herald-token in script dir)
+#   SWITCHBOARD_URL      — Switchboard endpoint (default: http://localhost:59237)
+#   SWITCHBOARD_AGENT_ID — Agent identifier (default: claude-code)
+#   SWITCHBOARD_CC_TOKEN — Bearer token (or reads from SWITCHBOARD_TOKEN_FILE)
+#   SWITCHBOARD_TOKEN_FILE — Path to token file (default: .switchboard-token in script dir)
 set -euo pipefail
 
-HERALD_URL="${HERALD_URL:-http://localhost:59237}"
-AGENT_ID="${HERALD_AGENT_ID:-claude-code}"
-TOKEN_FILE="${HERALD_TOKEN_FILE:-$(dirname "$0")/.herald-token}"
+SWITCHBOARD_URL="${SWITCHBOARD_URL:-http://localhost:59237}"
+AGENT_ID="${SWITCHBOARD_AGENT_ID:-claude-code}"
+TOKEN_FILE="${SWITCHBOARD_TOKEN_FILE:-$(dirname "$0")/.switchboard-token}"
 
-if [ -n "${HERALD_CC_TOKEN:-}" ]; then
-  TOKEN="$HERALD_CC_TOKEN"
+if [ -n "${SWITCHBOARD_CC_TOKEN:-}" ]; then
+  TOKEN="$SWITCHBOARD_CC_TOKEN"
 elif [ -f "$TOKEN_FILE" ]; then
   TOKEN=$(cat "$TOKEN_FILE")
 else
@@ -84,8 +84,8 @@ case "$EVENT" in
     RESULT="success"
     DETAIL="cwd:${CWD}"
     # Send initial telemetry
-    RTT_MS=$(curl -s -o /dev/null -w "%{time_total}" "${HERALD_URL}/health" 2>/dev/null | awk '{printf "%.1f", $1 * 1000}')
-    curl -s -X POST "${HERALD_URL}/api/v1/telemetry" \
+    RTT_MS=$(curl -s -o /dev/null -w "%{time_total}" "${SWITCHBOARD_URL}/health" 2>/dev/null | awk '{printf "%.1f", $1 * 1000}')
+    curl -s -X POST "${SWITCHBOARD_URL}/api/v1/telemetry" \
       -H "Content-Type: application/json" \
       -H "Authorization: Bearer ${TOKEN}" \
       -d "{\"agent_id\":\"${AGENT_ID}\",\"timestamp\":\"${TIMESTAMP}\",\"probe_source\":\"hook\",\"telemetry_mode\":\"sidecar_only\",\"network_rtt_ms\":${RTT_MS:-0},\"network_jitter_ms\":0.0,\"is_remote_session\":false}" > /dev/null 2>&1 &
@@ -100,7 +100,7 @@ case "$EVENT" in
     exit 0 ;;
 esac
 
-curl -s -X POST "${HERALD_URL}/api/v1/events" \
+curl -s -X POST "${SWITCHBOARD_URL}/api/v1/events" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer ${TOKEN}" \
   -d "{\"agent_id\":\"${AGENT_ID}\",\"timestamp\":\"${TIMESTAMP}\",\"action\":\"${ACTION}\",\"target\":$(echo "$TARGET" | jq -Rs .),\"result\":\"${RESULT}\",\"detail\":$(echo "$DETAIL" | jq -Rs .)}" > /dev/null 2>&1 &

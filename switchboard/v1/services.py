@@ -1,4 +1,4 @@
-"""Service layer for Herald v1 governance protocol.
+"""Service layer for Switchboard v1 governance protocol.
 
 File-backed JSON storage for POC. Replace with a real database on DEV.
 """
@@ -27,7 +27,7 @@ from .models import (
     TelemetryStore,
 )
 
-logger = logging.getLogger("herald.v1.services")
+logger = logging.getLogger("switchboard.v1.services")
 
 # --- Storage paths (POC: JSON files) ---
 
@@ -164,7 +164,7 @@ def _save_telemetry(store: TelemetryStore) -> None:
 
 def _generate_token() -> str:
     """Generate a sidecar auth token."""
-    return f"hld_sk_{secrets.token_urlsafe(32)}"
+    return f"swb_sk_{secrets.token_urlsafe(32)}"
 
 
 # --- Agent management ---
