@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/hero.png" alt="Switchboard" width="600">
+</p>
+
 # Switchboard
 
 Governance protocol for AI agent fleets. Manages the boundary around agents — not the agents themselves.
